@@ -46,10 +46,10 @@
       <el-table-column prop="expectedEndDate" label="计划完成" width="110" />
       <el-table-column label="操作" width="240" fixed="right">
         <template #default="{ row }">
-          <el-button v-permission="'promotion:view'" link type="primary" @click="handleViewProgress(row)">进度</el-button>
-          <el-button v-permission="'promotion:view'" link type="success" @click="handleViewRequirements(row)">需求</el-button>
-          <el-button v-permission="'promotion:edit'" link type="warning" @click="handleEdit(row)">编辑</el-button>
-          <el-button v-permission="'promotion:delete'" link type="danger" @click="handleDelete(row)">删除</el-button>
+          <el-button v-permission="'promotion:view'" link type="primary" @click="handleViewProgress(row as PromotionUnit)">进度</el-button>
+          <el-button v-permission="'promotion:view'" link type="success" @click="handleViewRequirements(row as PromotionUnit)">需求</el-button>
+          <el-button v-permission="'promotion:edit'" link type="warning" @click="handleEdit(row as PromotionUnit)">编辑</el-button>
+          <el-button v-permission="'promotion:delete'" link type="danger" @click="handleDelete(row as PromotionUnit)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -272,7 +272,7 @@ async function handleBatchSubmit() {
   }
 }
 
-async function handleDelete(row: PromotionUnit) {
+async function handleDelete(row: any) {
   try {
     await ElMessageBox.confirm(`确定删除推广单元「${row.orgName}」？`, '提示', { type: 'warning' })
     await deletePromotionUnit(row.id)
@@ -281,13 +281,13 @@ async function handleDelete(row: PromotionUnit) {
   } catch { /* cancelled */ }
 }
 
-function handleViewProgress(row: PromotionUnit) {
-  currentUnit.value = row
+function handleViewProgress(row: any) {
+  currentUnit.value = row as PromotionUnit
   progressDrawerVisible.value = true
 }
 
-function handleViewRequirements(row: PromotionUnit) {
-  currentUnit.value = row
+function handleViewRequirements(row: any) {
+  currentUnit.value = row as PromotionUnit
   requirementDrawerVisible.value = true
 }
 

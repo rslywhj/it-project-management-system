@@ -19,8 +19,8 @@
     "axios": "^1.7.9",
     "echarts": "^5.5.1",
     "nprogress": "^0.2.0",
-    "vue-ganttastic": "^2.2.1",
-    "dhtmlx-gantt": "^9.0.11"
+    "vue-ganttastic": "^0.9.34",
+    "dhtmlx-gantt": "^9.1.4"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.1",

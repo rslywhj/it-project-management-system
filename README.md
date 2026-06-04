@@ -39,14 +39,51 @@ it-project-management-system/
 
 ## 快速开始
 
-### 前端
+### Docker 一键部署（推荐）
+
+```bash
+# 1. 克隆项目
+git clone https://github.com/rslywhj/it-project-management-system.git
+cd it-project-management-system
+
+# 2. 配置环境变量
+cp .env.example .env
+# 编辑 .env 修改密码等配置
+
+# 3. 启动所有服务
+make dev
+# 或者直接使用 docker-compose
+docker-compose up -d
+
+# 4. 访问系统
+# 前端: http://localhost
+# 后端API: http://localhost:8080
+# Swagger: http://localhost:8080/swagger-ui.html
+# MinIO: http://localhost:9001
+```
+
+### 常用命令
+
+```bash
+make dev        # 启动开发环境
+make prod       # 启动生产环境
+make stop       # 停止所有服务
+make logs       # 查看日志
+make ps         # 查看服务状态
+make backup     # 备份数据库
+make clean      # 清理所有容器和数据
+```
+
+### 本地开发
+
+#### 前端
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-### 后端
+#### 后端
 ```bash
 cd backend
 mvn spring-boot:run

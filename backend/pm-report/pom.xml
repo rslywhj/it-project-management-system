@@ -17,5 +17,38 @@
             <groupId>com.pm</groupId>
             <artifactId>pm-common</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.pm</groupId>
+            <artifactId>pm-auth</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.pm</groupId>
+            <artifactId>pm-project</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.pm</groupId>
+            <artifactId>pm-requirement</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.pm</groupId>
+            <artifactId>pm-task</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.pm</groupId>
+            <artifactId>pm-milestone</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.pm</groupId>
+            <artifactId>pm-promotion</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.pm</groupId>
+            <artifactId>pm-test</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 </project>

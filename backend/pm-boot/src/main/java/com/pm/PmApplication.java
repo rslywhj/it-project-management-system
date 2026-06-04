@@ -15,7 +15,8 @@ import org.springframework.context.annotation.ComponentScan;
         "com.pm.milestone.mapper",
         "com.pm.promotion.mapper",
         "com.pm.test.mapper",
-        "com.pm.delivery.mapper"
+        "com.pm.delivery.mapper",
+        "com.pm.lowcode.mapper"
 })
 public class PmApplication {
 

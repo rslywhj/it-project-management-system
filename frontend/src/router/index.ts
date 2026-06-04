@@ -71,6 +71,26 @@ const businessRoutes: RouteRecordRaw[] = [
     ],
   },
   {
+    path: '/promotion',
+    component: MainLayout,
+    redirect: '/promotion/units',
+    meta: { title: '推广管理', icon: 'Promotion', permissions: ['promotion:view'] },
+    children: [
+      {
+        path: 'units',
+        name: 'PromotionUnits',
+        component: () => import('@/views/promotion/PromotionUnitListView.vue'),
+        meta: { title: '推广单元', icon: 'OfficeBuilding', permissions: ['promotion:view'] },
+      },
+      {
+        path: 'dashboard',
+        name: 'PromotionDashboard',
+        component: () => import('@/views/promotion/PromotionDashboardView.vue'),
+        meta: { title: '推广看板', icon: 'DataAnalysis', permissions: ['promotion:view'] },
+      },
+    ],
+  },
+  {
     path: '/system',
     component: MainLayout,
     redirect: '/system/user',

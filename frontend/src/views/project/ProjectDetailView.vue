@@ -43,6 +43,9 @@
         <el-tab-pane label="里程碑" name="milestone">
           <MilestoneList :project-id="projectId" />
         </el-tab-pane>
+        <el-tab-pane v-if="project?.promotionEnabled" label="推广管理" name="promotion">
+          <PromotionUnitList :project-id="projectId" />
+        </el-tab-pane>
         <el-tab-pane label="团队成员" name="member">
           <MemberList :project-id="projectId" />
         </el-tab-pane>
@@ -59,6 +62,7 @@ import type { Project } from '@/types/project'
 import RequirementList from '@/views/requirement/RequirementListView.vue'
 import TaskList from '@/views/task/TaskListView.vue'
 import MilestoneList from '@/views/milestone/MilestoneListView.vue'
+import PromotionUnitList from '@/views/promotion/PromotionUnitListView.vue'
 import MemberList from './components/MemberList.vue'
 
 const route = useRoute()
@@ -81,7 +85,7 @@ function statusLabel(status: string) {
 }
 
 function statusTagType(status: string) {
-  return (statusMap[status]?.type ?? 'info') as 'primary' | 'success' | 'warning' | 'info' | 'danger'
+  return statusMap[status]?.type ?? 'info'
 }
 
 async function loadProject() {

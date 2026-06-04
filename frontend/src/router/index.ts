@@ -35,42 +35,38 @@ const businessRoutes: RouteRecordRaw[] = [
       {
         path: 'list',
         name: 'ProjectList',
-        component: () => import('@/views/dashboard/DashboardView.vue'), // TODO: 替换为项目列表页
+        component: () => import('@/views/project/ProjectListView.vue'),
         meta: { title: '项目列表', icon: 'List', permissions: ['project:view'] },
       },
       {
-        path: 'create',
-        name: 'ProjectCreate',
-        component: () => import('@/views/dashboard/DashboardView.vue'), // TODO: 替换为创建项目页
-        meta: { title: '创建项目', icon: 'Plus', permissions: ['project:create'] },
+        path: ':id',
+        name: 'ProjectDetail',
+        component: () => import('@/views/project/ProjectDetailView.vue'),
+        meta: { title: '项目详情', hidden: true, permissions: ['project:view'] },
       },
     ],
   },
   {
     path: '/requirement',
     component: MainLayout,
-    redirect: '/requirement/list',
-    meta: { title: '需求管理', icon: 'Document' },
     children: [
       {
-        path: 'list',
-        name: 'RequirementList',
-        component: () => import('@/views/dashboard/DashboardView.vue'), // TODO: 替换为需求列表页
-        meta: { title: '需求列表', icon: 'List', permissions: ['requirement:view'] },
+        path: '',
+        name: 'RequirementGlobal',
+        component: () => import('@/views/requirement/RequirementListView.vue'),
+        meta: { title: '需求管理', icon: 'Document', permissions: ['requirement:view'] },
       },
     ],
   },
   {
     path: '/task',
     component: MainLayout,
-    redirect: '/task/list',
-    meta: { title: '任务管理', icon: 'Finished' },
     children: [
       {
-        path: 'list',
-        name: 'TaskList',
-        component: () => import('@/views/dashboard/DashboardView.vue'), // TODO: 替换为任务列表页
-        meta: { title: '任务列表', icon: 'List', permissions: ['task:view'] },
+        path: '',
+        name: 'TaskGlobal',
+        component: () => import('@/views/task/TaskListView.vue'),
+        meta: { title: '任务管理', icon: 'Finished', permissions: ['task:view'] },
       },
     ],
   },

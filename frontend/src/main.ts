@@ -6,6 +6,8 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import 'element-plus/dist/index.css'
 import 'nprogress/nprogress.css'
 
+import { GGanttChart, GGanttRow } from 'vue-ganttastic'
+
 import App from './App.vue'
 import router from './router'
 import { setupRouterGuards } from './router/guard'
@@ -22,6 +24,10 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 app.use(createPinia())
 app.use(router)
 app.use(ElementPlus, { locale: zhCn })
+
+// 注册 vue-ganttastic 甘特图组件
+app.component('GGanttChart', GGanttChart)
+app.component('GGanttRow', GGanttRow)
 
 // 注册权限指令
 app.directive('permission', vPermission)

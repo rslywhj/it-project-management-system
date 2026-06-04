@@ -16,11 +16,13 @@ export interface Requirement {
   projectId: number
   title: string
   description?: string
+  acceptanceCriteria?: string
   priority: Priority
   status: RequirementStatus
   source?: string
   category?: string
   assignedTo?: number
+  estimatedHours?: number
   milestoneId?: number
   createdBy: number
   createdAt: string
@@ -31,15 +33,16 @@ export interface Requirement {
 export interface RequirementCreateRequest {
   title: string
   description?: string
+  acceptanceCriteria?: string
   priority?: Priority
   source?: string
   category?: string
   assignedTo?: number
-  milestoneId?: number
+  estimatedHours?: number
 }
 
-/** 状态流转请求 */
+/** 状态流转请求（对齐后端：targetStatus + remark） */
 export interface StatusUpdateRequest {
-  status: RequirementStatus
-  comment?: string
+  targetStatus: RequirementStatus
+  remark?: string
 }

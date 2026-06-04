@@ -1,6 +1,6 @@
 import service from './index'
 import type { ApiResult, PageParams, PageResult } from '@/types/api'
-import type { Task, TaskCreateRequest, ProgressUpdateRequest } from '@/types/task'
+import type { Task, TaskCreateRequest, ProgressUpdateRequest, DependencyRequest } from '@/types/task'
 
 /** 创建任务 */
 export function createTask(projectId: number, data: TaskCreateRequest) {
@@ -10,7 +10,7 @@ export function createTask(projectId: number, data: TaskCreateRequest) {
 /** 获取任务列表 */
 export function getTaskList(
   projectId: number,
-  params: PageParams & { status?: string; priority?: string; assignedTo?: number },
+  params: PageParams & { keyword?: string; status?: string; assignedTo?: number },
 ) {
   return service.get<ApiResult<PageResult<Task>>>(`/projects/${projectId}/tasks`, { params })
 }
@@ -40,7 +40,7 @@ export function createSubtask(parentTaskId: number, data: TaskCreateRequest) {
   return service.post<ApiResult<Task>>(`/tasks/${parentTaskId}/subtasks`, data)
 }
 
-/** 获取子任务树 */
+/** 获取子任务列表 */
 export function getSubtasks(parentTaskId: number) {
   return service.get<ApiResult<Task[]>>(`/tasks/${parentTaskId}/subtasks`)
 }
@@ -51,6 +51,6 @@ export function getWbsTree(projectId: number) {
 }
 
 /** 添加任务依赖 */
-export function addDependency(taskId: number, dependsOnTaskId: number) {
-  return service.post<ApiResult<void>>(`/tasks/${taskId}/dependencies`, { dependsOnTaskId })
+export function addDependency(taskId: number, data: DependencyRequest) {
+  return service.post<ApiResult<void>>(`/tasks/${taskId}/dependencies`, data)
 }

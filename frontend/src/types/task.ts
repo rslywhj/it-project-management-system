@@ -2,7 +2,7 @@
 export type TaskStatus = 'todo' | 'in_progress' | 'done'
 
 /** 任务类型 */
-export type TaskType = 'development' | 'testing' | 'design' | 'research' | 'deployment' | 'other'
+export type TaskType = 'dev' | 'test' | 'design' | 'research' | 'deploy' | 'other'
 
 /** 任务信息（对齐后端 TaskVO） */
 export interface Task {
@@ -40,9 +40,14 @@ export interface TaskCreateRequest {
   plannedEnd?: string
 }
 
-/** 进度更新请求 */
+/** 进度更新请求（对齐后端：completionRate + remark） */
 export interface ProgressUpdateRequest {
   completionRate: number
-  actualStart?: string
-  actualEnd?: string
+  remark?: string
+}
+
+/** 依赖请求 */
+export interface DependencyRequest {
+  dependsOnTaskId: number
+  dependencyType?: 'FS' | 'FF' | 'SS' | 'SF'
 }

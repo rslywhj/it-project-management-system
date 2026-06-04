@@ -88,6 +88,9 @@
         <el-form-item label="描述">
           <el-input v-model="formData.description" type="textarea" :rows="3" placeholder="请输入需求描述" />
         </el-form-item>
+        <el-form-item label="验收标准">
+          <el-input v-model="formData.acceptanceCriteria" type="textarea" :rows="2" placeholder="请输入验收标准" />
+        </el-form-item>
         <el-form-item label="优先级">
           <el-select v-model="formData.priority" placeholder="请选择优先级">
             <el-option label="紧急" value="critical" />
@@ -101,6 +104,9 @@
         </el-form-item>
         <el-form-item label="来源">
           <el-input v-model="formData.source" placeholder="如：用户反馈、产品经理" />
+        </el-form-item>
+        <el-form-item label="预估工时">
+          <el-input-number v-model="formData.estimatedHours" :min="0" :max="9999" :step="4" placeholder="小时" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -174,9 +180,11 @@ const editingId = ref<number | null>(null)
 const formData = reactive<RequirementCreateRequest>({
   title: '',
   description: '',
+  acceptanceCriteria: '',
   priority: 'medium',
   category: '',
   source: '',
+  estimatedHours: undefined,
 })
 const formRules: FormRules = {
   title: [{ required: true, message: '请输入需求标题', trigger: 'blur' }],
@@ -219,7 +227,7 @@ async function loadData() {
   loading.value = true
   try {
     const { data } = await getRequirementList(props.projectId, queryParams)
-    requirementList.value = data.list
+    requirementList.value = data.records
     total.value = data.total
   } catch { /* handled */ } finally {
     loading.value = false
@@ -241,9 +249,11 @@ function handleEdit(row: Requirement) {
   Object.assign(formData, {
     title: row.title,
     description: row.description,
+    acceptanceCriteria: row.acceptanceCriteria,
     priority: row.priority,
     category: row.category,
     source: row.source,
+    estimatedHours: row.estimatedHours,
   })
   dialogVisible.value = true
 }
@@ -265,8 +275,8 @@ async function handleStatusSubmit() {
   if (!currentRequirement.value) return
   try {
     await updateRequirementStatus(currentRequirement.value.id, {
-      status: nextStatus.value,
-      comment: statusComment.value,
+      targetStatus: nextStatus.value,
+      remark: statusComment.value,
     })
     ElMessage.success('状态流转成功')
     statusDialogVisible.value = false

@@ -40,6 +40,9 @@
         <el-tab-pane label="任务管理" name="task">
           <TaskList :project-id="projectId" />
         </el-tab-pane>
+        <el-tab-pane label="里程碑" name="milestone">
+          <MilestoneList :project-id="projectId" />
+        </el-tab-pane>
         <el-tab-pane label="团队成员" name="member">
           <MemberList :project-id="projectId" />
         </el-tab-pane>
@@ -55,6 +58,7 @@ import { getProjectDetail } from '@/api/project'
 import type { Project } from '@/types/project'
 import RequirementList from '@/views/requirement/RequirementListView.vue'
 import TaskList from '@/views/task/TaskListView.vue'
+import MilestoneList from '@/views/milestone/MilestoneListView.vue'
 import MemberList from './components/MemberList.vue'
 
 const route = useRoute()

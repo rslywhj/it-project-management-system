@@ -3,6 +3,7 @@ export interface ApiResult<T = unknown> {
   code: number
   message: string
   data: T
+  timestamp: number
 }
 
 /** 分页请求参数 */
@@ -11,12 +12,12 @@ export interface PageParams {
   pageSize: number
 }
 
-/** 分页响应 */
+/** 分页响应（对齐后端：records/total/page/size） */
 export interface PageResult<T> {
-  list: T[]
+  records: T[]
   total: number
   page: number
-  pageSize: number
+  size: number
 }
 
 /** 登录请求 */
@@ -29,5 +30,16 @@ export interface LoginParams {
 export interface LoginResult {
   accessToken: string
   refreshToken: string
+  tokenType: string
   expiresIn: number
+  userInfo: LoginUserInfo
+}
+
+/** 登录响应中的用户信息 */
+export interface LoginUserInfo {
+  userId: number
+  username: string
+  realName: string
+  role: string
+  orgId?: number
 }

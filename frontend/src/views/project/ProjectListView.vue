@@ -207,7 +207,7 @@ async function loadProjects() {
   loading.value = true
   try {
     const { data } = await getProjectList(queryParams)
-    projectList.value = data.list
+    projectList.value = data.records
     total.value = data.total
   } catch {
     // API 错误已由拦截器处理

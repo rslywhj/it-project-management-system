@@ -26,7 +26,7 @@ service.interceptors.request.use(
 service.interceptors.response.use(
   (response: AxiosResponse<ApiResult>) => {
     const res = response.data
-    if (res.code !== 0) {
+    if (res.code !== 200) {
       ElMessage.error(res.message || '请求失败')
       // 401: Token 失效，跳转登录
       if (res.code === 401) {

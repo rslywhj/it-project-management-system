@@ -238,7 +238,7 @@ async function loadData() {
   loading.value = true
   try {
     const { data } = await getTaskList(props.projectId, queryParams)
-    taskList.value = data.list
+    taskList.value = data.records
     total.value = data.total
   } catch { /* handled */ } finally {
     loading.value = false

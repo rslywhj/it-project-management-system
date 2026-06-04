@@ -1,31 +1,31 @@
 import service from './index'
-import type { ApiResult, PageParams, PageResult } from '@/types/api'
+import type { PageParams, PageResult } from '@/types/api'
 import type { Milestone, MilestoneCreateRequest, MilestoneUpdateRequest } from '@/types/milestone'
 
 /** 创建里程碑 */
-export function createMilestone(projectId: number, data: MilestoneCreateRequest) {
-  return service.post<ApiResult<Milestone>>(`/projects/${projectId}/milestones`, data)
+export async function createMilestone(projectId: number, data: MilestoneCreateRequest): Promise<Milestone> {
+  return service.post(`/projects/${projectId}/milestones`, data)
 }
 
 /** 获取里程碑列表 */
-export function getMilestoneList(
+export async function getMilestoneList(
   projectId: number,
   params: PageParams & { status?: string },
-) {
-  return service.get<ApiResult<PageResult<Milestone>>>(`/projects/${projectId}/milestones`, { params })
+): Promise<PageResult<Milestone>> {
+  return service.get(`/projects/${projectId}/milestones`, { params })
 }
 
 /** 获取里程碑详情 */
-export function getMilestoneDetail(id: number) {
-  return service.get<ApiResult<Milestone>>(`/milestones/${id}`)
+export async function getMilestoneDetail(id: number): Promise<Milestone> {
+  return service.get(`/milestones/${id}`)
 }
 
 /** 更新里程碑 */
-export function updateMilestone(id: number, data: MilestoneUpdateRequest) {
-  return service.put<ApiResult<Milestone>>(`/milestones/${id}`, data)
+export async function updateMilestone(id: number, data: MilestoneUpdateRequest): Promise<Milestone> {
+  return service.put(`/milestones/${id}`, data)
 }
 
 /** 删除里程碑 */
-export function deleteMilestone(id: number) {
-  return service.delete<ApiResult<void>>(`/milestones/${id}`)
+export async function deleteMilestone(id: number): Promise<void> {
+  return service.delete(`/milestones/${id}`)
 }

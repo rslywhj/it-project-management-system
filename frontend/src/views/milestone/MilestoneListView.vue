@@ -51,7 +51,7 @@
     <div class="pagination-wrapper">
       <el-pagination
         v-model:current-page="queryParams.page"
-        v-model:page-size="queryParams.pageSize"
+        v-model:page-size="queryParams.size"
         :total="total"
         :page-sizes="[10, 20, 50]"
         layout="total, sizes, prev, pager, next"
@@ -125,7 +125,7 @@ const milestoneList = ref<Milestone[]>([])
 const total = ref(0)
 const queryParams = reactive({
   page: 1,
-  pageSize: 10,
+  size: 10,
   status: '',
 })
 
@@ -155,7 +155,7 @@ const statusLabelMap: Record<string, string> = {
   completed: '已完成',
   delayed: '已延期',
 }
-const statusTypeMap: Record<string, string> = {
+const statusTypeMap: Record<string, 'info' | 'warning' | 'success' | 'danger'> = {
   pending: 'info',
   in_progress: 'warning',
   completed: 'success',
@@ -163,16 +163,16 @@ const statusTypeMap: Record<string, string> = {
 }
 
 function statusLabel(s: string) { return statusLabelMap[s] ?? s }
-function statusTagType(s: string) { return (statusTypeMap[s] ?? '') as '' | 'success' | 'warning' | 'info' | 'danger' }
-function timelineType(s: string) {
-  const map: Record<string, string> = { pending: 'info', in_progress: 'warning', completed: 'success', delayed: 'danger' }
-  return (map[s] ?? 'info') as '' | 'success' | 'warning' | 'info' | 'danger'
+function statusTagType(s: string): 'info' | 'warning' | 'success' | 'danger' { return statusTypeMap[s] ?? 'info' }
+function timelineType(s: string): 'info' | 'warning' | 'success' | 'danger' {
+  const map: Record<string, 'info' | 'warning' | 'success' | 'danger'> = { pending: 'info', in_progress: 'warning', completed: 'success', delayed: 'danger' }
+  return map[s] ?? 'info'
 }
 
 async function loadData() {
   loading.value = true
   try {
-    const { data } = await getMilestoneList(props.projectId, queryParams)
+    const data = await getMilestoneList(props.projectId, queryParams)
     milestoneList.value = data.records
     total.value = data.total
   } catch { /* handled */ } finally {

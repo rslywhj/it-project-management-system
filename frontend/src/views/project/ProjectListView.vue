@@ -68,10 +68,10 @@
         </el-table-column>
         <el-table-column label="操作" width="160" fixed="right">
           <template #default="{ row }">
-            <el-button v-permission="'project:edit'" link type="primary" @click.stop="handleEdit(row)">
+            <el-button v-permission="'project:edit'" link type="primary" @click.stop="handleEdit(row as Project)">
               编辑
             </el-button>
-            <el-button v-permission="'project:delete'" link type="danger" @click.stop="handleDelete(row)">
+            <el-button v-permission="'project:delete'" link type="danger" @click.stop="handleDelete(row as Project)">
               删除
             </el-button>
           </template>
@@ -81,7 +81,7 @@
       <div class="pagination-wrapper">
         <el-pagination
           v-model:current-page="queryParams.page"
-          v-model:page-size="queryParams.pageSize"
+          v-model:page-size="queryParams.size"
           :total="total"
           :page-sizes="[10, 20, 50]"
           layout="total, sizes, prev, pager, next, jumper"
@@ -145,7 +145,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { getProjectList, createProject, updateProject, deleteProject } from '@/api/project'
 import { formatDate } from '@/utils'
-import type { Project, ProjectCreateRequest } from '@/types/project'
+import type { Project, ProjectCreateRequest, ProjectStatus } from '@/types/project'
 import type { PageParams } from '@/types/api'
 
 const router = useRouter()
@@ -156,7 +156,7 @@ const projectList = ref<Project[]>([])
 const total = ref(0)
 const queryParams = reactive<PageParams & { keyword?: string; status?: string }>({
   page: 1,
-  pageSize: 10,
+  size: 10,
   keyword: '',
   status: '',
 })
@@ -169,7 +169,7 @@ const formRef = ref<FormInstance>()
 const editingId = ref<number | null>(null)
 const dateRange = ref<[string, string] | null>(null)
 
-const formData = reactive<ProjectCreateRequest & { status?: string }>({
+const formData = reactive<ProjectCreateRequest & { status?: ProjectStatus }>({
   projectCode: '',
   name: '',
   description: '',
@@ -186,9 +186,9 @@ const formRules: FormRules = {
 }
 
 // 状态映射
-const statusMap: Record<string, { label: string; type: string }> = {
+const statusMap: Record<string, { label: string; type: 'info' | 'warning' | 'success' | 'danger' }> = {
   planning: { label: '规划中', type: 'info' },
-  active: { label: '进行中', type: '' },
+  active: { label: '进行中', type: 'info' },
   suspended: { label: '已暂停', type: 'warning' },
   completed: { label: '已完成', type: 'success' },
   cancelled: { label: '已取消', type: 'danger' },
@@ -198,15 +198,15 @@ function statusLabel(status: string) {
   return statusMap[status]?.label ?? status
 }
 
-function statusTagType(status: string) {
-  return (statusMap[status]?.type ?? '') as '' | 'success' | 'warning' | 'info' | 'danger'
+function statusTagType(status: string): 'info' | 'warning' | 'success' | 'danger' {
+  return statusMap[status]?.type ?? 'info'
 }
 
 // 加载数据
 async function loadProjects() {
   loading.value = true
   try {
-    const { data } = await getProjectList(queryParams)
+    const data = await getProjectList(queryParams)
     projectList.value = data.records
     total.value = data.total
   } catch {
@@ -282,10 +282,10 @@ async function handleSubmit() {
   submitLoading.value = true
   try {
     if (isEdit.value && editingId.value) {
-      await updateProject(editingId.value, formData)
+      await updateProject(editingId.value, formData as Partial<Project>)
       ElMessage.success('更新成功')
     } else {
-      await createProject(formData)
+      await createProject(formData as Partial<Project>)
       ElMessage.success('创建成功')
     }
     dialogVisible.value = false

@@ -68,9 +68,9 @@ const loading = ref(false)
 const project = ref<Project | null>(null)
 const activeTab = ref('requirement')
 
-const statusMap: Record<string, { label: string; type: string }> = {
+const statusMap: Record<string, { label: string; type: 'info' | 'warning' | 'success' | 'danger' }> = {
   planning: { label: '规划中', type: 'info' },
-  active: { label: '进行中', type: '' },
+  active: { label: '进行中', type: 'info' },
   suspended: { label: '已暂停', type: 'warning' },
   completed: { label: '已完成', type: 'success' },
   cancelled: { label: '已取消', type: 'danger' },
@@ -81,13 +81,13 @@ function statusLabel(status: string) {
 }
 
 function statusTagType(status: string) {
-  return (statusMap[status]?.type ?? '') as '' | 'success' | 'warning' | 'info' | 'danger'
+  return (statusMap[status]?.type ?? 'info') as 'primary' | 'success' | 'warning' | 'info' | 'danger'
 }
 
 async function loadProject() {
   loading.value = true
   try {
-    const { data } = await getProjectDetail(projectId)
+    const data = await getProjectDetail(projectId)
     project.value = data
   } catch {
     // API 错误已由拦截器处理

@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { login as loginApi, logout as logoutApi, getCurrentUser } from '@/api/auth'
 import { setToken, setRefreshToken, clearTokens } from '@/utils/auth'
-import type { LoginParams, LoginUserInfo } from '@/types/api'
 
 /** 用户信息（对齐后端 /auth/me 响应） */
 export interface UserInfo {
@@ -24,13 +23,13 @@ export const useUserStore = defineStore('user', () => {
   const username = computed(() => userInfo.value?.username ?? '')
   const realName = computed(() => userInfo.value?.realName ?? '')
 
-  /** 登录 */
-  async function login(params: LoginParams) {
-    const { data } = await loginApi(params)
-    setToken(data.accessToken)
-    setRefreshToken(data.refreshToken)
+  /** 登录 — interceptor returns LoginResult directly */
+  async function login(params: { username: string; password: string }) {
+    const res = await loginApi(params)
+    setToken(res.accessToken)
+    setRefreshToken(res.refreshToken)
     // 登录接口返回基础用户信息，立即设置
-    const loginUser = data.userInfo
+    const loginUser = res.userInfo
     userInfo.value = {
       userId: loginUser.userId,
       username: loginUser.username,
@@ -45,10 +44,10 @@ export const useUserStore = defineStore('user', () => {
     await fetchUserInfo()
   }
 
-  /** 获取用户信息 */
+  /** 获取用户信息 — interceptor returns UserInfo directly */
   async function fetchUserInfo() {
     try {
-      const { data } = await getCurrentUser()
+      const data = await getCurrentUser()
       userInfo.value = data
       roles.value = data.roles || [data.role]
       permissions.value = data.permissions || []
@@ -85,7 +84,6 @@ export const useUserStore = defineStore('user', () => {
 
   /** 检查是否拥有任一权限 */
   function hasPermission(perms: string | string[]): boolean {
-    // super_admin 拥有全部权限
     if (permissions.value.includes('*')) return true
     const permList = Array.isArray(perms) ? perms : [perms]
     return permList.some((p) => permissions.value.includes(p))

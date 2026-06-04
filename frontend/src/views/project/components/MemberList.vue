@@ -16,7 +16,7 @@
       <el-table-column prop="joinedAt" label="加入时间" width="170" />
       <el-table-column label="操作" width="120">
         <template #default="{ row }">
-          <el-button v-permission="'team:delete'" link type="danger" @click="handleRemove(row)">
+          <el-button v-permission="'team:delete'" link type="danger" @click="handleRemove(row as ProjectMember)">
             移除
           </el-button>
         </template>
@@ -37,7 +37,7 @@ const members = ref<ProjectMember[]>([])
 
 async function loadMembers() {
   try {
-    const { data } = await getProjectMembers(props.projectId)
+    const data = await getProjectMembers(props.projectId)
     members.value = data
   } catch {
     // 错误已处理

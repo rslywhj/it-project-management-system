@@ -6,10 +6,10 @@ export interface ApiResult<T = unknown> {
   timestamp: number
 }
 
-/** 分页请求参数 */
+/** 分页请求参数（对齐后端：size） */
 export interface PageParams {
   page: number
-  pageSize: number
+  size: number
 }
 
 /** 分页响应（对齐后端：records/total/page/size） */

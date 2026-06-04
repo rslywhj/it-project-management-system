@@ -1,23 +1,23 @@
 import service from './index'
-import type { ApiResult, LoginParams, LoginResult } from '@/types/api'
-import type { UserInfo } from '@/types/user'
+import type { LoginParams, LoginResult } from '@/types/api'
+import type { UserInfo } from '@/stores/user'
 
 /** 登录 */
-export function login(params: LoginParams) {
-  return service.post<ApiResult<LoginResult>>('/auth/login', params)
+export async function login(params: LoginParams): Promise<LoginResult> {
+  return service.post('/auth/login', params)
 }
 
 /** 登出 */
-export function logout() {
-  return service.post<ApiResult<void>>('/auth/logout')
+export async function logout(): Promise<void> {
+  return service.post('/auth/logout')
 }
 
-/** 刷新 Token */
-export function refreshToken(token: string) {
-  return service.post<ApiResult<LoginResult>>('/auth/refresh', { refreshToken: token })
+/** 刷新 Token（query 参数） */
+export async function refreshToken(token: string): Promise<LoginResult> {
+  return service.post('/auth/refresh', null, { params: { refreshToken: token } })
 }
 
 /** 获取当前用户信息 */
-export function getCurrentUser() {
-  return service.get<ApiResult<UserInfo>>('/auth/me')
+export async function getCurrentUser(): Promise<UserInfo> {
+  return service.get('/auth/me')
 }

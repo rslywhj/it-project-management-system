@@ -34,7 +34,7 @@
     <el-table v-loading="loading" :data="requirementList" stripe>
       <el-table-column prop="title" label="需求标题" min-width="240">
         <template #default="{ row }">
-          <span class="req-title" @click="handleViewDetail(row)">{{ row.title }}</span>
+          <span class="req-title" @click="handleViewDetail(row as Requirement)">{{ row.title }}</span>
         </template>
       </el-table-column>
       <el-table-column prop="priority" label="优先级" width="90">
@@ -60,9 +60,9 @@
       </el-table-column>
       <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
-          <el-button v-permission="'requirement:edit'" link type="primary" @click="handleEdit(row)">编辑</el-button>
-          <el-button v-permission="'requirement:manage'" link type="warning" @click="handleStatusChange(row)">流转</el-button>
-          <el-button v-permission="'requirement:delete'" link type="danger" @click="handleDelete(row)">删除</el-button>
+          <el-button v-permission="'requirement:edit'" link type="primary" @click="handleEdit(row as Requirement)">编辑</el-button>
+          <el-button v-permission="'requirement:manage'" link type="warning" @click="handleStatusChange(row as Requirement)">流转</el-button>
+          <el-button v-permission="'requirement:delete'" link type="danger" @click="handleDelete(row as Requirement)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -70,7 +70,7 @@
     <div class="pagination-wrapper">
       <el-pagination
         v-model:current-page="queryParams.page"
-        v-model:page-size="queryParams.pageSize"
+        v-model:page-size="queryParams.size"
         :total="total"
         :page-sizes="[10, 20, 50]"
         layout="total, sizes, prev, pager, next"
@@ -165,7 +165,7 @@ const requirementList = ref<Requirement[]>([])
 const total = ref(0)
 const queryParams = reactive({
   page: 1,
-  pageSize: 10,
+  size: 10,
   keyword: '',
   status: '',
   priority: '',
@@ -210,23 +210,23 @@ const availableTransitions = ref<RequirementStatus[]>([])
 
 // 映射
 const priorityMap: Record<string, string> = { critical: '紧急', high: '高', medium: '中', low: '低' }
-const priorityTypeMap: Record<string, string> = { critical: 'danger', high: 'warning', medium: '', low: 'info' }
+const priorityTypeMap: Record<string, 'danger' | 'warning' | 'info'> = { critical: 'danger', high: 'warning', medium: 'info', low: 'info' }
 const statusLabelMap: Record<string, string> = {
   draft: '草稿', reviewing: '评审中', approved: '已通过', rejected: '已驳回', scheduled: '已排期', done: '已完成',
 }
-const statusTypeMap: Record<string, string> = {
-  draft: 'info', reviewing: 'warning', approved: 'success', rejected: 'danger', scheduled: '', done: 'success',
+const statusTypeMap: Record<string, 'info' | 'warning' | 'success' | 'danger'> = {
+  draft: 'info', reviewing: 'warning', approved: 'success', rejected: 'danger', scheduled: 'info', done: 'success',
 }
 
 function priorityLabel(p: string) { return priorityMap[p] ?? p }
-function priorityType(p: string) { return (priorityTypeMap[p] ?? '') as '' | 'success' | 'warning' | 'info' | 'danger' }
+function priorityType(p: string): 'danger' | 'warning' | 'info' { return priorityTypeMap[p] ?? 'info' }
 function statusLabel(s: string) { return statusLabelMap[s] ?? s }
-function statusType(s: string) { return (statusTypeMap[s] ?? '') as '' | 'success' | 'warning' | 'info' | 'danger' }
+function statusType(s: string): 'info' | 'warning' | 'success' | 'danger' { return statusTypeMap[s] ?? 'info' }
 
 async function loadData() {
   loading.value = true
   try {
-    const { data } = await getRequirementList(props.projectId, queryParams)
+    const data = await getRequirementList(props.projectId, queryParams)
     requirementList.value = data.records
     total.value = data.total
   } catch { /* handled */ } finally {

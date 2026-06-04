@@ -22,7 +22,7 @@ service.interceptors.request.use(
   (error) => Promise.reject(error),
 )
 
-// 响应拦截器：统一错误处理
+// 响应拦截器：统一错误处理，返回 data payload
 service.interceptors.response.use(
   (response: AxiosResponse<ApiResult>) => {
     const res = response.data
@@ -35,7 +35,8 @@ service.interceptors.response.use(
       }
       return Promise.reject(new Error(res.message || '请求失败'))
     }
-    return response
+    // 返回内层 data，视图可直接 const { data } = await api()
+    return res.data as any
   },
   (error) => {
     if (error.response?.status === 401) {

@@ -34,7 +34,7 @@
       <el-table-column prop="wbsCode" label="WBS" width="100" />
       <el-table-column prop="title" label="任务标题" min-width="220">
         <template #default="{ row }">
-          <span class="task-title" @click="handleViewDetail(row)">{{ row.title }}</span>
+          <span class="task-title" @click="handleViewDetail(row as Task)">{{ row.title }}</span>
         </template>
       </el-table-column>
       <el-table-column prop="type" label="类型" width="90">
@@ -61,9 +61,9 @@
       <el-table-column prop="plannedEnd" label="结束" width="110" />
       <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
-          <el-button v-permission="'task:edit'" link type="primary" @click="handleEdit(row)">编辑</el-button>
-          <el-button v-permission="'task:edit'" link type="success" @click="handleProgressUpdate(row)">进度</el-button>
-          <el-button v-permission="'task:delete'" link type="danger" @click="handleDelete(row)">删除</el-button>
+          <el-button v-permission="'task:edit'" link type="primary" @click="handleEdit(row as Task)">编辑</el-button>
+          <el-button v-permission="'task:edit'" link type="success" @click="handleProgressUpdate(row as Task)">进度</el-button>
+          <el-button v-permission="'task:delete'" link type="danger" @click="handleDelete(row as Task)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -99,7 +99,7 @@
     <div v-if="viewMode === 'list'" class="pagination-wrapper">
       <el-pagination
         v-model:current-page="queryParams.page"
-        v-model:page-size="queryParams.pageSize"
+        v-model:page-size="queryParams.size"
         :total="total"
         :page-sizes="[10, 20, 50]"
         layout="total, sizes, prev, pager, next"
@@ -192,7 +192,7 @@ const wbsTree = ref<Task[]>([])
 const total = ref(0)
 const queryParams = reactive({
   page: 1,
-  pageSize: 10,
+  size: 10,
   keyword: '',
   status: '',
 })
@@ -207,7 +207,7 @@ const dateRange = ref<[string, string] | null>(null)
 const formData = reactive<TaskCreateRequest>({
   title: '',
   description: '',
-  type: 'development',
+  type: 'dev',
   priority: 'medium',
   plannedStart: '',
   plannedEnd: '',
@@ -223,21 +223,21 @@ const progressValue = ref(0)
 
 // 映射
 const typeMap: Record<string, string> = {
-  development: '开发', testing: '测试', design: '设计', research: '调研', deployment: '部署', other: '其他',
+  dev: '开发', test: '测试', design: '设计', research: '调研', deploy: '部署', other: '其他',
 }
 const statusLabelMap: Record<string, string> = { todo: '待办', in_progress: '进行中', done: '已完成' }
-const statusTypeMap: Record<string, string> = { todo: 'info', in_progress: 'warning', done: 'success' }
-const priorityTypeMap: Record<string, string> = { critical: 'danger', high: 'warning', medium: '', low: 'info' }
+const statusTypeMap: Record<string, 'info' | 'warning' | 'success'> = { todo: 'info', in_progress: 'warning', done: 'success' }
+const priorityTypeMap: Record<string, 'danger' | 'warning' | 'info'> = { critical: 'danger', high: 'warning', medium: 'info', low: 'info' }
 
 function typeLabel(t: string) { return typeMap[t] ?? t }
 function statusLabel(s: string) { return statusLabelMap[s] ?? s }
-function statusType(s: string) { return (statusTypeMap[s] ?? '') as '' | 'success' | 'warning' | 'info' | 'danger' }
-function priorityType(p: string) { return (priorityTypeMap[p] ?? '') as '' | 'success' | 'warning' | 'info' | 'danger' }
+function statusType(s: string): 'info' | 'warning' | 'success' { return statusTypeMap[s] ?? 'info' }
+function priorityType(p: string): 'danger' | 'warning' | 'info' { return priorityTypeMap[p] ?? 'info' }
 
 async function loadData() {
   loading.value = true
   try {
-    const { data } = await getTaskList(props.projectId, queryParams)
+    const data = await getTaskList(props.projectId, queryParams)
     taskList.value = data.records
     total.value = data.total
   } catch { /* handled */ } finally {
@@ -248,7 +248,7 @@ async function loadData() {
 async function loadWbs() {
   wbsLoading.value = true
   try {
-    const { data } = await getWbsTree(props.projectId)
+    const data = await getWbsTree(props.projectId)
     wbsTree.value = data
   } catch { /* handled */ } finally {
     wbsLoading.value = false

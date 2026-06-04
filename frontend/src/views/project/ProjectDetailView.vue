@@ -46,6 +46,12 @@
         <el-tab-pane v-if="project?.promotionEnabled" label="推广管理" name="promotion">
           <PromotionUnitList :project-id="projectId" />
         </el-tab-pane>
+        <el-tab-pane label="测试管理" name="test">
+          <TestPlanList :project-id="projectId" />
+        </el-tab-pane>
+        <el-tab-pane label="交付物" name="delivery">
+          <DeliveryList :project-id="projectId" />
+        </el-tab-pane>
         <el-tab-pane label="团队成员" name="member">
           <MemberList :project-id="projectId" />
         </el-tab-pane>
@@ -63,6 +69,8 @@ import RequirementList from '@/views/requirement/RequirementListView.vue'
 import TaskList from '@/views/task/TaskListView.vue'
 import MilestoneList from '@/views/milestone/MilestoneListView.vue'
 import PromotionUnitList from '@/views/promotion/PromotionUnitListView.vue'
+import TestPlanList from '@/views/test/TestPlanListView.vue'
+import DeliveryList from '@/views/delivery/DeliveryListView.vue'
 import MemberList from './components/MemberList.vue'
 
 const route = useRoute()

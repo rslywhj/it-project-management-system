@@ -91,6 +91,44 @@ const businessRoutes: RouteRecordRaw[] = [
     ],
   },
   {
+    path: '/test',
+    component: MainLayout,
+    redirect: '/test/plans',
+    meta: { title: '测试管理', icon: 'Monitor', permissions: ['test:view'] },
+    children: [
+      {
+        path: 'plans',
+        name: 'TestPlans',
+        component: () => import('@/views/test/TestPlanListView.vue'),
+        meta: { title: '测试计划', icon: 'Notebook', permissions: ['test:view'] },
+      },
+      {
+        path: 'cases',
+        name: 'TestCases',
+        component: () => import('@/views/test/TestCaseListView.vue'),
+        meta: { title: '用例管理', icon: 'Document', permissions: ['test:view'] },
+      },
+      {
+        path: 'defects',
+        name: 'Defects',
+        component: () => import('@/views/test/DefectListView.vue'),
+        meta: { title: '缺陷跟踪', icon: 'Warning', permissions: ['test:view'] },
+      },
+    ],
+  },
+  {
+    path: '/delivery',
+    component: MainLayout,
+    children: [
+      {
+        path: '',
+        name: 'DeliveryList',
+        component: () => import('@/views/delivery/DeliveryListView.vue'),
+        meta: { title: '交付物管理', icon: 'Files', permissions: ['delivery:view'] },
+      },
+    ],
+  },
+  {
     path: '/system',
     component: MainLayout,
     redirect: '/system/user',

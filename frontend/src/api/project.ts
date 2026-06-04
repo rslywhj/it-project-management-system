@@ -33,7 +33,7 @@ export async function getProjectMembers(projectId: number): Promise<ProjectMembe
 }
 
 /** 添加项目成员（query 参数） */
-export async function addProjectMember(projectId: number, data: { userId: number; role: string }): Promise<ProjectMember> {
+export async function addProjectMember(projectId: number, data: { userId: number; role: string }): Promise<void> {
   return service.post(`/projects/${projectId}/members`, null, { params: data })
 }
 

@@ -48,14 +48,50 @@
         </el-tab-pane>
       </el-tabs>
     </el-card>
+
+    <!-- 编辑项目对话框 -->
+    <el-dialog v-model="editDialogVisible" title="编辑项目" width="560px" destroy-on-close>
+      <el-form ref="editFormRef" :model="editFormData" :rules="editFormRules" label-width="100px">
+        <el-form-item label="项目名称" prop="name">
+          <el-input v-model="editFormData.name" placeholder="请输入项目名称" />
+        </el-form-item>
+        <el-form-item label="项目描述">
+          <el-input v-model="editFormData.description" type="textarea" :rows="3" placeholder="请输入项目描述" />
+        </el-form-item>
+        <el-form-item label="项目状态">
+          <el-select v-model="editFormData.status" placeholder="请选择状态">
+            <el-option label="规划中" value="planning" />
+            <el-option label="进行中" value="in_progress" />
+            <el-option label="已暂停" value="on_hold" />
+            <el-option label="已关闭" value="closed" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="计划时间">
+          <el-date-picker
+            v-model="editDateRange"
+            type="daterange"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            value-format="YYYY-MM-DD"
+            @change="handleEditDateChange"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="editDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="editLoading" @click="handleEditSubmit">确定</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { getProjectDetail } from '@/api/project'
-import type { Project } from '@/types/project'
+import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
+import { getProjectDetail, updateProject } from '@/api/project'
+import type { Project, ProjectStatus } from '@/types/project'
 import RequirementList from '@/views/requirement/RequirementListView.vue'
 import TaskList from '@/views/task/TaskListView.vue'
 import MilestoneList from '@/views/milestone/MilestoneListView.vue'
@@ -68,12 +104,27 @@ const loading = ref(false)
 const project = ref<Project | null>(null)
 const activeTab = ref('requirement')
 
+// 编辑对话框
+const editDialogVisible = ref(false)
+const editLoading = ref(false)
+const editFormRef = ref<FormInstance>()
+const editDateRange = ref<[string, string] | null>(null)
+const editFormData = reactive({
+  name: '',
+  description: '',
+  status: '' as ProjectStatus | '',
+  startDate: '',
+  endDate: '',
+})
+const editFormRules: FormRules = {
+  name: [{ required: true, message: '请输入项目名称', trigger: 'blur' }],
+}
+
 const statusMap: Record<string, { label: string; type: 'info' | 'warning' | 'success' | 'danger' }> = {
   planning: { label: '规划中', type: 'info' },
-  active: { label: '进行中', type: 'info' },
-  suspended: { label: '已暂停', type: 'warning' },
-  completed: { label: '已完成', type: 'success' },
-  cancelled: { label: '已取消', type: 'danger' },
+  in_progress: { label: '进行中', type: 'info' },
+  on_hold: { label: '已暂停', type: 'warning' },
+  closed: { label: '已关闭', type: 'success' },
 }
 
 function statusLabel(status: string) {
@@ -97,7 +148,45 @@ async function loadProject() {
 }
 
 function handleEdit() {
-  // TODO: 打开编辑对话框
+  if (!project.value) return
+  editFormData.name = project.value.name
+  editFormData.description = project.value.description ?? ''
+  editFormData.status = project.value.status
+  editFormData.startDate = project.value.startDate ?? ''
+  editFormData.endDate = project.value.endDate ?? ''
+  if (project.value.startDate && project.value.endDate) {
+    editDateRange.value = [project.value.startDate, project.value.endDate]
+  } else {
+    editDateRange.value = null
+  }
+  editDialogVisible.value = true
+}
+
+function handleEditDateChange(val: [string, string] | null) {
+  editFormData.startDate = val?.[0] ?? ''
+  editFormData.endDate = val?.[1] ?? ''
+}
+
+async function handleEditSubmit() {
+  const valid = await editFormRef.value?.validate().catch(() => false)
+  if (!valid) return
+  editLoading.value = true
+  try {
+    const updated = await updateProject(projectId, {
+      name: editFormData.name,
+      description: editFormData.description,
+      status: editFormData.status as ProjectStatus,
+      startDate: editFormData.startDate,
+      endDate: editFormData.endDate,
+    })
+    project.value = updated
+    ElMessage.success('更新成功')
+    editDialogVisible.value = false
+  } catch {
+    // 错误已由拦截器处理
+  } finally {
+    editLoading.value = false
+  }
 }
 
 onMounted(() => {

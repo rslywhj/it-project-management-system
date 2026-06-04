@@ -2,7 +2,7 @@
 export type TaskStatus = 'todo' | 'in_progress' | 'done'
 
 /** 任务类型 */
-export type TaskType = 'dev' | 'test' | 'design' | 'research' | 'deploy' | 'other'
+export type TaskType = 'dev' | 'test' | 'design' | 'research' | 'deploy' | 'training' | 'review' | 'other'
 
 /** 任务信息（对齐后端 TaskVO） */
 export interface Task {

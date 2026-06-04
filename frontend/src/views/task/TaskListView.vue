@@ -119,11 +119,13 @@
         </el-form-item>
         <el-form-item label="类型">
           <el-select v-model="formData.type" placeholder="请选择任务类型">
-            <el-option label="开发" value="development" />
-            <el-option label="测试" value="testing" />
+            <el-option label="开发" value="dev" />
+            <el-option label="测试" value="test" />
             <el-option label="设计" value="design" />
             <el-option label="调研" value="research" />
-            <el-option label="部署" value="deployment" />
+            <el-option label="部署" value="deploy" />
+            <el-option label="培训" value="training" />
+            <el-option label="评审" value="review" />
             <el-option label="其他" value="other" />
           </el-select>
         </el-form-item>
@@ -152,6 +154,32 @@
         <el-button type="primary" :loading="submitLoading" @click="handleSubmit">确定</el-button>
       </template>
     </el-dialog>
+
+    <!-- 任务详情抽屉 -->
+    <el-drawer v-model="detailDrawerVisible" title="任务详情" size="480px">
+      <template v-if="detailTask">
+        <el-descriptions :column="1" border>
+          <el-descriptions-item label="标题">{{ detailTask.title }}</el-descriptions-item>
+          <el-descriptions-item label="WBS编码">{{ detailTask.wbsCode || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="类型">{{ typeLabel(detailTask.type) }}</el-descriptions-item>
+          <el-descriptions-item label="状态">
+            <el-tag :type="statusType(detailTask.status)" size="small">{{ statusLabel(detailTask.status) }}</el-tag>
+          </el-descriptions-item>
+          <el-descriptions-item label="优先级">
+            <el-tag :type="priorityType(detailTask.priority)" size="small">{{ detailTask.priority }}</el-tag>
+          </el-descriptions-item>
+          <el-descriptions-item label="进度">
+            <el-progress :percentage="Number(detailTask.completionRate)" :stroke-width="6" />
+          </el-descriptions-item>
+          <el-descriptions-item label="计划开始">{{ detailTask.plannedStart || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="计划结束">{{ detailTask.plannedEnd || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="实际开始">{{ detailTask.actualStart || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="实际结束">{{ detailTask.actualEnd || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="创建时间">{{ detailTask.createdAt }}</el-descriptions-item>
+          <el-descriptions-item label="描述">{{ detailTask.description || '-' }}</el-descriptions-item>
+        </el-descriptions>
+      </template>
+    </el-drawer>
 
     <!-- 进度更新对话框 -->
     <el-dialog v-model="progressDialogVisible" title="更新进度" width="360px">
@@ -216,6 +244,10 @@ const formRules: FormRules = {
   title: [{ required: true, message: '请输入任务标题', trigger: 'blur' }],
 }
 
+// 任务详情抽屉
+const detailDrawerVisible = ref(false)
+const detailTask = ref<Task | null>(null)
+
 // 进度更新
 const progressDialogVisible = ref(false)
 const progressTaskId = ref<number | null>(null)
@@ -223,7 +255,7 @@ const progressValue = ref(0)
 
 // 映射
 const typeMap: Record<string, string> = {
-  dev: '开发', test: '测试', design: '设计', research: '调研', deploy: '部署', other: '其他',
+  dev: '开发', test: '测试', design: '设计', research: '调研', deploy: '部署', training: '培训', review: '评审', other: '其他',
 }
 const statusLabelMap: Record<string, string> = { todo: '待办', in_progress: '进行中', done: '已完成' }
 const statusTypeMap: Record<string, 'info' | 'warning' | 'success'> = { todo: 'info', in_progress: 'warning', done: 'success' }
@@ -264,7 +296,7 @@ watch(viewMode, (mode) => {
 function handleCreate() {
   isEdit.value = false
   editingId.value = null
-  Object.assign(formData, { title: '', description: '', type: 'development', priority: 'medium', plannedStart: '', plannedEnd: '' })
+  Object.assign(formData, { title: '', description: '', type: 'dev', priority: 'medium', plannedStart: '', plannedEnd: '' })
   dateRange.value = null
   dialogVisible.value = true
 }
@@ -290,8 +322,8 @@ function handleDateChange(val: [string, string] | null) {
 }
 
 function handleViewDetail(row: Task) {
-  // TODO: 打开任务详情抽屉
-  console.log('view task', row.id)
+  detailTask.value = row
+  detailDrawerVisible.value = true
 }
 
 function handleProgressUpdate(row: Task) {

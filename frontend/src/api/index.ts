@@ -32,6 +32,8 @@ service.interceptors.response.use(
       if (res.code === 401) {
         clearTokens()
         router.push('/login')
+      } else if (res.code === 403) {
+        router.push('/403')
       }
       return Promise.reject(new Error(res.message || '请求失败'))
     }
@@ -42,6 +44,8 @@ service.interceptors.response.use(
     if (error.response?.status === 401) {
       clearTokens()
       router.push('/login')
+    } else if (error.response?.status === 403) {
+      router.push('/403')
     }
     const msg = error.response?.data?.message || error.message || '网络异常'
     ElMessage.error(msg)

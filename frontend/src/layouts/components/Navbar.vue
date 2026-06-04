@@ -27,7 +27,7 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { ElMessageBox } from 'element-plus'
+import { ElMessageBox, ElMessage } from 'element-plus'
 import { useAppStore } from '@/stores/app'
 import { useUserStore } from '@/stores/user'
 import Breadcrumb from './Breadcrumb.vue'
@@ -50,7 +50,7 @@ async function handleCommand(command: string) {
       // 用户取消
     }
   } else if (command === 'profile') {
-    // TODO: 跳转个人中心
+    ElMessage.info('个人中心功能开发中')
   }
 }
 </script>

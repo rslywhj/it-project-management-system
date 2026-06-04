@@ -115,6 +115,31 @@
       </template>
     </el-dialog>
 
+    <!-- 需求详情抽屉 -->
+    <el-drawer v-model="detailDrawerVisible" title="需求详情" size="480px">
+      <template v-if="detailRequirement">
+        <el-descriptions :column="1" border>
+          <el-descriptions-item label="标题">{{ detailRequirement.title }}</el-descriptions-item>
+          <el-descriptions-item label="状态">
+            <el-tag :type="statusType(detailRequirement.status)" size="small">
+              {{ statusLabel(detailRequirement.status) }}
+            </el-tag>
+          </el-descriptions-item>
+          <el-descriptions-item label="优先级">
+            <el-tag :type="priorityType(detailRequirement.priority)" size="small">
+              {{ priorityLabel(detailRequirement.priority) }}
+            </el-tag>
+          </el-descriptions-item>
+          <el-descriptions-item label="分类">{{ detailRequirement.category || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="来源">{{ detailRequirement.source || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="预估工时">{{ detailRequirement.estimatedHours ?? '-' }}h</el-descriptions-item>
+          <el-descriptions-item label="创建时间">{{ formatDate(detailRequirement.createdAt) }}</el-descriptions-item>
+          <el-descriptions-item label="描述">{{ detailRequirement.description || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="验收标准">{{ detailRequirement.acceptanceCriteria || '-' }}</el-descriptions-item>
+        </el-descriptions>
+      </template>
+    </el-drawer>
+
     <!-- 状态流转对话框 -->
     <el-dialog v-model="statusDialogVisible" title="需求状态流转" width="400px">
       <el-form label-width="80px">
@@ -190,6 +215,10 @@ const formRules: FormRules = {
   title: [{ required: true, message: '请输入需求标题', trigger: 'blur' }],
 }
 
+// 需求详情抽屉
+const detailDrawerVisible = ref(false)
+const detailRequirement = ref<Requirement | null>(null)
+
 // 状态流转
 const statusDialogVisible = ref(false)
 const currentRequirement = ref<Requirement | null>(null)
@@ -259,8 +288,8 @@ function handleEdit(row: Requirement) {
 }
 
 function handleViewDetail(row: Requirement) {
-  // TODO: 打开需求详情抽屉
-  console.log('view requirement', row.id)
+  detailRequirement.value = row
+  detailDrawerVisible.value = true
 }
 
 function handleStatusChange(row: Requirement) {

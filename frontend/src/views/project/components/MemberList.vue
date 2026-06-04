@@ -22,18 +22,52 @@
         </template>
       </el-table-column>
     </el-table>
+
+    <!-- 添加成员对话框 -->
+    <el-dialog v-model="addDialogVisible" title="添加成员" width="400px" destroy-on-close>
+      <el-form ref="addFormRef" :model="addFormData" :rules="addFormRules" label-width="80px">
+        <el-form-item label="用户ID" prop="userId">
+          <el-input-number v-model="addFormData.userId" :min="1" placeholder="请输入用户ID" style="width: 100%" />
+        </el-form-item>
+        <el-form-item label="角色" prop="role">
+          <el-select v-model="addFormData.role" placeholder="请选择角色" style="width: 100%">
+            <el-option label="管理员" value="admin" />
+            <el-option label="开发者" value="developer" />
+            <el-option label="测试员" value="tester" />
+            <el-option label="观察者" value="viewer" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="addDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="addLoading" @click="handleAddSubmit">确定</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { getProjectMembers, removeProjectMember } from '@/api/project'
+import { ref, reactive, onMounted } from 'vue'
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import { getProjectMembers, addProjectMember, removeProjectMember } from '@/api/project'
 import type { ProjectMember } from '@/types/project'
 
 const props = defineProps<{ projectId: number }>()
 
 const members = ref<ProjectMember[]>([])
+
+// 添加成员对话框
+const addDialogVisible = ref(false)
+const addLoading = ref(false)
+const addFormRef = ref<FormInstance>()
+const addFormData = reactive({
+  userId: undefined as number | undefined,
+  role: 'developer',
+})
+const addFormRules: FormRules = {
+  userId: [{ required: true, message: '请输入用户ID', trigger: 'blur' }],
+  role: [{ required: true, message: '请选择角色', trigger: 'change' }],
+}
 
 async function loadMembers() {
   try {
@@ -45,7 +79,25 @@ async function loadMembers() {
 }
 
 function handleAdd() {
-  // TODO: 打开添加成员对话框
+  addFormData.userId = undefined
+  addFormData.role = 'developer'
+  addDialogVisible.value = true
+}
+
+async function handleAddSubmit() {
+  const valid = await addFormRef.value?.validate().catch(() => false)
+  if (!valid || !addFormData.userId) return
+  addLoading.value = true
+  try {
+    await addProjectMember(props.projectId, { userId: addFormData.userId, role: addFormData.role })
+    ElMessage.success('添加成功')
+    addDialogVisible.value = false
+    loadMembers()
+  } catch {
+    // 错误已由拦截器处理
+  } finally {
+    addLoading.value = false
+  }
 }
 
 async function handleRemove(row: ProjectMember) {

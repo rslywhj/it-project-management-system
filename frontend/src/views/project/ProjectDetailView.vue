@@ -34,6 +34,9 @@
     <!-- Tab 切换 -->
     <el-card shadow="never" style="margin-top: 12px">
       <el-tabs v-model="activeTab">
+        <el-tab-pane label="项目看板" name="dashboard">
+          <ProjectDashboard :project-id="projectId" />
+        </el-tab-pane>
         <el-tab-pane label="需求管理" name="requirement">
           <RequirementList :project-id="projectId" />
         </el-tab-pane>
@@ -71,6 +74,7 @@ import MilestoneList from '@/views/milestone/MilestoneListView.vue'
 import PromotionUnitList from '@/views/promotion/PromotionUnitListView.vue'
 import TestPlanList from '@/views/test/TestPlanListView.vue'
 import DeliveryList from '@/views/delivery/DeliveryListView.vue'
+import ProjectDashboard from '@/views/report/ProjectDashboardView.vue'
 import MemberList from './components/MemberList.vue'
 
 const route = useRoute()

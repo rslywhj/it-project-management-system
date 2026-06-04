@@ -129,6 +129,32 @@ const businessRoutes: RouteRecordRaw[] = [
     ],
   },
   {
+    path: '/report',
+    component: MainLayout,
+    redirect: '/report/dashboard',
+    meta: { title: '看板与报表', icon: 'DataAnalysis', permissions: ['report:view'] },
+    children: [
+      {
+        path: 'dashboard',
+        name: 'ReportDashboard',
+        component: () => import('@/views/report/ProjectDashboardView.vue'),
+        meta: { title: '项目看板', icon: 'Odometer', permissions: ['report:view'] },
+      },
+      {
+        path: 'gantt',
+        name: 'ReportGantt',
+        component: () => import('@/views/report/GanttChartView.vue'),
+        meta: { title: '甘特图', icon: 'Calendar', permissions: ['report:view'] },
+      },
+      {
+        path: 'workload',
+        name: 'ReportWorkload',
+        component: () => import('@/views/report/WorkloadView.vue'),
+        meta: { title: '工时统计', icon: 'Timer', permissions: ['report:view'] },
+      },
+    ],
+  },
+  {
     path: '/system',
     component: MainLayout,
     redirect: '/system/user',

@@ -45,18 +45,18 @@ echo -e "${GREEN}代码拉取完成${NC}"
 echo -e "\n${YELLOW}[3/7] 环境配置...${NC}"
 if [ ! -f .env ]; then
     cp .env.example .env
-    # 生成随机密码
-    MYSQL_ROOT_PASS=$(openssl rand -base64 16)
-    MYSQL_PASS=$(openssl rand -base64 16)
-    REDIS_PASS=$(openssl rand -base64 16)
-    JWT_SECRET=$(openssl rand -base64 32)
-    MINIO_PASS=$(openssl rand -base64 16)
+    # 生成随机密码（只含字母数字，避免sed分隔符冲突）
+    MYSQL_ROOT_PASS=$(openssl rand -hex 16)
+    MYSQL_PASS=$(openssl rand -hex 16)
+    REDIS_PASS=$(openssl rand -hex 16)
+    JWT_SECRET=$(openssl rand -hex 32)
+    MINIO_PASS=$(openssl rand -hex 16)
 
-    sed -i "s/your_mysql_root_password/$MYSQL_ROOT_PASS/g" .env
-    sed -i "s/your_mysql_password/$MYSQL_PASS/g" .env
-    sed -i "s/your_redis_password/$REDIS_PASS/g" .env
-    sed -i "s/your_jwt_secret_key_at_least_32_chars/$JWT_SECRET/g" .env
-    sed -i "s/your_minio_password/$MINIO_PASS/g" .env
+    sed -i "s|your_mysql_root_password|$MYSQL_ROOT_PASS|g" .env
+    sed -i "s|your_mysql_password|$MYSQL_PASS|g" .env
+    sed -i "s|your_redis_password|$REDIS_PASS|g" .env
+    sed -i "s|your_jwt_secret_key_at_least_32_chars|$JWT_SECRET|g" .env
+    sed -i "s|your_minio_password|$MINIO_PASS|g" .env
 
     echo -e "${GREEN}环境配置已生成${NC}"
 else

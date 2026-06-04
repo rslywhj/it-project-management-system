@@ -27,6 +27,9 @@
 it-project-management-system/
 ├── frontend/                # 前端项目（Vue 3）
 ├── backend/                 # 后端项目（Spring Boot）
+├── database/                # 数据库脚本
+│   ├── V001__create_schema.sql    # 全量建表脚本
+│   └── V002__init_base_data.sql   # 基础数据初始化
 ├── docs/                    # 文档
 │   ├── product-plan.md      # 产品方案
 │   ├── architecture.md      # 技术架构设计

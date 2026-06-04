@@ -17,5 +17,9 @@
             <groupId>com.pm</groupId>
             <artifactId>pm-common</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.pm</groupId>
+            <artifactId>pm-task</artifactId>
+        </dependency>
     </dependencies>
 </project>

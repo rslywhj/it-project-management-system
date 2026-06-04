@@ -10,7 +10,7 @@ import org.springframework.context.annotation.ComponentScan;
  */
 @SpringBootApplication
 @ComponentScan(basePackages = "com.pm")
-@MapperScan(basePackages = {"com.pm.project.mapper", "com.pm.requirement.mapper", "com.pm.task.mapper"})
+@MapperScan(basePackages = {"com.pm.project.mapper", "com.pm.requirement.mapper", "com.pm.task.mapper", "com.pm.promotion.mapper"})
 public class PmApplication {
 
     public static void main(String[] args) {

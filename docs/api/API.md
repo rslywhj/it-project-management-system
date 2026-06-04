@@ -11,7 +11,14 @@
 | 需求管理 | 8 | 需求CRUD + 状态流转 + 需求池 + 指派 |
 | 任务管理 | 9 | 任务CRUD + WBS + 依赖 + 进度 |
 | 里程碑管理 | 5 | 里程碑CRUD |
-| **合计** | **35** | |
+| 推广单元管理 | 6 | 推广单元CRUD + 批量创建 |
+| 推广阶段模板 | 6 | 阶段模板CRUD + 默认模板初始化 |
+| 推广进度管理 | 2 | 进度查询 + 阶段推进 |
+| 推广单元需求 | 5 | 差异化需求CRUD |
+| 配置基线管理 | 5 | 配置基线CRUD |
+| 配置差异管理 | 4 | 配置差异CRUD + 审批 |
+| 推广看板 | 1 | 汇总数据 |
+| **合计** | **64** | |
 
 ## 通用说明
 
@@ -343,3 +350,233 @@ Authorization: Bearer <access_token>
 | guest | 9个（仅view） | self |
 
 完整权限码清单见 `database/V002__init_base_data.sql`
+
+---
+
+## 6. 推广单元管理
+
+### POST /api/projects/{projectId}/promotion-units
+创建推广单元
+
+**请求体**：
+```json
+{
+  "orgName": "北京分公司",
+  "orgCode": "BJ001",
+  "responsibleUserId": 5,
+  "expectedStartDate": "2026-07-01",
+  "expectedEndDate": "2026-12-31",
+  "remark": "备注"
+}
+```
+
+### POST /api/projects/{projectId}/promotion-units/batch
+批量创建推广单元
+
+**请求体**：
+```json
+{
+  "projectId": 1,
+  "units": [
+    {"orgName": "北京分公司", "orgCode": "BJ001"},
+    {"orgName": "上海分公司", "orgCode": "SH001"}
+  ]
+}
+```
+
+### GET /api/projects/{projectId}/promotion-units
+推广单元列表（分页）
+
+**参数**: `page`, `size`, `keyword`, `status`
+
+### GET /api/projects/{projectId}/promotion-units/{unitId}
+推广单元详情
+
+### PUT /api/projects/{projectId}/promotion-units/{unitId}
+更新推广单元
+
+### DELETE /api/projects/{projectId}/promotion-units/{unitId}
+删除推广单元
+
+---
+
+## 7. 推广阶段模板管理
+
+### POST /api/promotion-stage-templates
+创建推广阶段模板
+
+**请求体**：
+```json
+{
+  "projectId": 1,
+  "name": "需求调研",
+  "description": "调研成员单位需求",
+  "sortOrder": 1,
+  "locked": false,
+  "estimatedDays": 15
+}
+```
+
+### GET /api/promotion-stage-templates
+获取阶段模板列表
+
+**参数**: `projectId`（可选，不传则获取集团全局模板）
+
+### GET /api/promotion-stage-templates/{templateId}
+获取阶段模板详情
+
+### PUT /api/promotion-stage-templates/{templateId}
+更新阶段模板
+
+### DELETE /api/promotion-stage-templates/{templateId}
+删除阶段模板
+
+### POST /api/promotion-stage-templates/init-default
+初始化集团默认阶段模板
+
+---
+
+## 8. 推广进度管理
+
+### GET /api/promotion-units/{unitId}/progress
+获取推广单元阶段进度列表
+
+### POST /api/promotion-units/{unitId}/progress/advance
+推进阶段状态
+
+**请求体**：
+```json
+{
+  "stageTemplateId": 1,
+  "targetStatus": "in_progress",
+  "completionRate": 50.00,
+  "remark": "备注"
+}
+```
+
+**状态流转规则**：
+- `pending` → `in_progress` | `skipped`
+- `in_progress` → `completed`
+
+---
+
+## 9. 推广单元需求管理
+
+### POST /api/promotion-units/{unitId}/requirements
+创建推广单元需求
+
+**请求体**：
+```json
+{
+  "title": "定制化报表需求",
+  "description": "需要定制化财务报表",
+  "requirementId": null,
+  "type": "differential",
+  "priority": "high"
+}
+```
+
+### GET /api/promotion-units/{unitId}/requirements
+获取推广单元需求列表（分页）
+
+**参数**: `page`, `size`, `type`, `status`
+
+### GET /api/promotion-units/{unitId}/requirements/{requirementId}
+获取需求详情
+
+### PUT /api/promotion-units/{unitId}/requirements/{requirementId}
+更新需求
+
+### DELETE /api/promotion-units/{unitId}/requirements/{requirementId}
+删除需求
+
+---
+
+## 10. 配置基线管理
+
+### POST /api/projects/{projectId}/config-baselines
+创建配置基线
+
+**请求体**：
+```json
+{
+  "configKey": "system.theme.color",
+  "configValue": "#1890ff",
+  "description": "系统主题色",
+  "locked": false
+}
+```
+
+### GET /api/projects/{projectId}/config-baselines
+获取配置基线列表（分页）
+
+**参数**: `page`, `size`, `keyword`
+
+### GET /api/projects/{projectId}/config-baselines/{baselineId}
+获取配置基线详情
+
+### PUT /api/projects/{projectId}/config-baselines/{baselineId}
+更新配置基线
+
+### DELETE /api/projects/{projectId}/config-baselines/{baselineId}
+删除配置基线
+
+---
+
+## 11. 配置差异管理
+
+### POST /api/promotion-units/{unitId}/config-diffs
+创建配置差异
+
+**请求体**：
+```json
+{
+  "configBaselineId": 1,
+  "diffValue": "#ff0000",
+  "diffReason": "分公司品牌色要求"
+}
+```
+
+### GET /api/promotion-units/{unitId}/config-diffs
+获取配置差异列表（分页）
+
+**参数**: `page`, `size`, `status`
+
+### PUT /api/promotion-units/{unitId}/config-diffs/{diffId}/approve
+审批配置差异
+
+**请求体**：
+```json
+{
+  "status": "approved",
+  "remark": "同意"
+}
+```
+
+### DELETE /api/promotion-units/{unitId}/config-diffs/{diffId}
+删除配置差异
+
+---
+
+## 12. 推广看板
+
+### GET /api/projects/{projectId}/promotion-dashboard
+获取推广看板汇总数据
+
+**响应**：
+```json
+{
+  "code": 200,
+  "data": {
+    "projectId": 1,
+    "projectName": "IT项目管理系统",
+    "totalUnits": 10,
+    "inProgressUnits": 5,
+    "completedUnits": 3,
+    "delayedUnits": 2,
+    "overallCompletionRate": 45.50,
+    "unitProgressList": [...],
+    "stageCompletionList": [...]
+  }
+}
+```

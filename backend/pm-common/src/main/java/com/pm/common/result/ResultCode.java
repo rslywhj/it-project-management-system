@@ -31,6 +31,19 @@ public enum ResultCode {
     REQUIREMENT_STATUS_INVALID(1021, "需求状态流转不合法"),
     TASK_NOT_FOUND(1030, "任务不存在"),
     TASK_DEPENDENCY_CYCLE(1031, "任务依赖存在循环"),
+
+    // 推广管理错误码 1xxx
+    PROMOTION_UNIT_NOT_FOUND(1040, "推广单元不存在"),
+    PROMOTION_UNIT_ORG_EXISTS(1041, "该项目下已存在相同编码的推广单元"),
+    STAGE_TEMPLATE_NOT_FOUND(1042, "推广阶段模板不存在"),
+    STAGE_TEMPLATE_LOCKED(1043, "该阶段模板已锁定，不可修改"),
+    PROGRESS_NOT_FOUND(1044, "推广进度记录不存在"),
+    PROGRESS_STAGE_LOCKED(1045, "当前阶段为集团锁定阶段，不可跳过"),
+    UNIT_REQUIREMENT_NOT_FOUND(1046, "推广单元需求不存在"),
+    CONFIG_BASELINE_NOT_FOUND(1047, "配置基线不存在"),
+    CONFIG_BASELINE_KEY_EXISTS(1048, "该项目下已存在相同配置项键"),
+    UNIT_CONFIG_DIFF_NOT_FOUND(1049, "配置差异记录不存在"),
+    UNIT_CONFIG_DIFF_ALREADY_RESOLVED(1050, "配置差异已审批，不可重复操作"),
     ;
 
     private final int code;

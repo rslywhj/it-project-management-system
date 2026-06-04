@@ -55,6 +55,15 @@
         <el-tab-pane label="交付物" name="delivery">
           <DeliveryList :project-id="projectId" />
         </el-tab-pane>
+        <el-tab-pane label="风险与问题" name="risk">
+          <RiskList :project-id="projectId" />
+        </el-tab-pane>
+        <el-tab-pane label="资源工时" name="resource">
+          <ResourceList :project-id="projectId" />
+        </el-tab-pane>
+        <el-tab-pane label="知识库" name="knowledge">
+          <KnowledgeList :project-id="projectId" />
+        </el-tab-pane>
         <el-tab-pane label="团队成员" name="member">
           <MemberList :project-id="projectId" />
         </el-tab-pane>
@@ -75,6 +84,9 @@ import PromotionUnitList from '@/views/promotion/PromotionUnitListView.vue'
 import TestPlanList from '@/views/test/TestPlanListView.vue'
 import DeliveryList from '@/views/delivery/DeliveryListView.vue'
 import ProjectDashboard from '@/views/report/ProjectDashboardView.vue'
+import RiskList from '@/views/risk/RiskListView.vue'
+import ResourceList from '@/views/resource/ResourceListView.vue'
+import KnowledgeList from '@/views/knowledge/KnowledgeListView.vue'
 import MemberList from './components/MemberList.vue'
 
 const route = useRoute()

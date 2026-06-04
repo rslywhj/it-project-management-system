@@ -155,6 +155,50 @@ const businessRoutes: RouteRecordRaw[] = [
     ],
   },
   {
+    path: '/risk',
+    component: MainLayout,
+    redirect: '/risk/risks',
+    meta: { title: '风险与问题', icon: 'Warning', permissions: ['risk:view'] },
+    children: [
+      {
+        path: 'risks',
+        name: 'RiskList',
+        component: () => import('@/views/risk/RiskListView.vue'),
+        meta: { title: '风险管理', icon: 'Warning', permissions: ['risk:view'] },
+      },
+      {
+        path: 'issues',
+        name: 'IssueList',
+        component: () => import('@/views/risk/IssueListView.vue'),
+        meta: { title: '问题跟踪', icon: 'ChatDotRound', permissions: ['risk:view'] },
+      },
+    ],
+  },
+  {
+    path: '/resource',
+    component: MainLayout,
+    children: [
+      {
+        path: '',
+        name: 'ResourceList',
+        component: () => import('@/views/resource/ResourceListView.vue'),
+        meta: { title: '资源与工时', icon: 'UserFilled', permissions: ['resource:view'] },
+      },
+    ],
+  },
+  {
+    path: '/knowledge',
+    component: MainLayout,
+    children: [
+      {
+        path: '',
+        name: 'KnowledgeList',
+        component: () => import('@/views/knowledge/KnowledgeListView.vue'),
+        meta: { title: '知识库', icon: 'Collection', permissions: ['knowledge:view'] },
+      },
+    ],
+  },
+  {
     path: '/system',
     component: MainLayout,
     redirect: '/system/user',

@@ -36,6 +36,7 @@
         <module>pm-milestone</module>
         <module>pm-promotion</module>
         <module>pm-delivery</module>
+        <module>pm-risk</module>
         <module>pm-notification</module>
         <module>pm-report</module>
         <module>pm-lowcode</module>
@@ -84,6 +85,11 @@
             <dependency>
                 <groupId>com.pm</groupId>
                 <artifactId>pm-delivery</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.pm</groupId>
+                <artifactId>pm-risk</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

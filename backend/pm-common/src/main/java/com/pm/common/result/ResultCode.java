@@ -31,6 +31,11 @@ public enum ResultCode {
     REQUIREMENT_STATUS_INVALID(1021, "需求状态流转不合法"),
     TASK_NOT_FOUND(1030, "任务不存在"),
     TASK_DEPENDENCY_CYCLE(1031, "任务依赖存在循环"),
+    RISK_NOT_FOUND(1040, "风险不存在"),
+    RISK_STATUS_INVALID(1041, "风险状态流转不合法"),
+    ISSUE_NOT_FOUND(1050, "问题不存在"),
+    ISSUE_STATUS_INVALID(1051, "问题状态流转不合法"),
+    WARNING_NOT_FOUND(1060, "预警不存在"),
     ;
 
     private final int code;

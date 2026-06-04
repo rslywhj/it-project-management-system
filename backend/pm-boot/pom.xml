@@ -43,6 +43,10 @@
         </dependency>
         <dependency>
             <groupId>com.pm</groupId>
+            <artifactId>pm-risk</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.pm</groupId>
             <artifactId>pm-notification</artifactId>
         </dependency>
         <dependency>

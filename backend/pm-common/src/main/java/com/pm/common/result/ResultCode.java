@@ -27,6 +27,7 @@ public enum ResultCode {
     TOKEN_INVALID(1005, "Token无效"),
     PROJECT_NOT_FOUND(1010, "项目不存在"),
     PROJECT_MEMBER_EXISTS(1011, "项目成员已存在"),
+    MILESTONE_NOT_FOUND(1015, "里程碑不存在"),
     REQUIREMENT_NOT_FOUND(1020, "需求不存在"),
     REQUIREMENT_STATUS_INVALID(1021, "需求状态流转不合法"),
     TASK_NOT_FOUND(1030, "任务不存在"),

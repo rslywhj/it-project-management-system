@@ -57,6 +57,22 @@
             <groupId>com.pm</groupId>
             <artifactId>pm-integration</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.pm</groupId>
+            <artifactId>pm-test</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.pm</groupId>
+            <artifactId>pm-knowledge</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.pm</groupId>
+            <artifactId>pm-resource</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.pm</groupId>
+            <artifactId>pm-risk</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.mysql</groupId>

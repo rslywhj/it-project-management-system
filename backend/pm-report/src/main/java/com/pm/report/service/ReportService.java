@@ -285,7 +285,7 @@ public class ReportService {
         List<Requirement> requirements = requirementMapper.selectList(
                 new LambdaQueryWrapper<Requirement>()
                         .eq(Requirement::getProjectId, projectId)
-                        .eq(Requirement::getIsDeleted, 0));
+                        .eq(Requirement::getDeleted, 0));
 
         stats.setTotal(requirements.size());
         stats.setDraft((int) requirements.stream().filter(r -> "draft".equals(r.getStatus())).count());
@@ -310,7 +310,7 @@ public class ReportService {
         List<Task> tasks = taskMapper.selectList(
                 new LambdaQueryWrapper<Task>()
                         .eq(Task::getProjectId, projectId)
-                        .eq(Task::getIsDeleted, 0));
+                        .eq(Task::getDeleted, 0));
 
         stats.setTotal(tasks.size());
         stats.setTodo((int) tasks.stream().filter(t -> "todo".equals(t.getStatus())).count());
@@ -339,7 +339,7 @@ public class ReportService {
         List<Bug> bugs = bugMapper.selectList(
                 new LambdaQueryWrapper<Bug>()
                         .eq(Bug::getProjectId, projectId)
-                        .eq(Bug::getIsDeleted, 0));
+                        .eq(Bug::getDeleted, 0));
 
         stats.setTotal(bugs.size());
         stats.setOpen((int) bugs.stream().filter(b -> "open".equals(b.getStatus())).count());
@@ -357,7 +357,7 @@ public class ReportService {
         List<Milestone> milestones = milestoneMapper.selectList(
                 new LambdaQueryWrapper<Milestone>()
                         .eq(Milestone::getProjectId, projectId)
-                        .eq(Milestone::getIsDeleted, 0));
+                        .eq(Milestone::getDeleted, 0));
 
         stats.setTotal(milestones.size());
         stats.setPending((int) milestones.stream().filter(m -> "pending".equals(m.getStatus())).count());
@@ -396,7 +396,7 @@ public class ReportService {
         List<Requirement> requirements = requirementMapper.selectList(
                 new LambdaQueryWrapper<Requirement>()
                         .eq(Requirement::getProjectId, projectId)
-                        .eq(Requirement::getIsDeleted, 0));
+                        .eq(Requirement::getDeleted, 0));
 
         Map<String, Long> grouped = requirements.stream()
                 .collect(Collectors.groupingBy(Requirement::getStatus, Collectors.counting()));
@@ -413,7 +413,7 @@ public class ReportService {
         List<Task> tasks = taskMapper.selectList(
                 new LambdaQueryWrapper<Task>()
                         .eq(Task::getProjectId, projectId)
-                        .eq(Task::getIsDeleted, 0));
+                        .eq(Task::getDeleted, 0));
 
         Map<String, Long> grouped = tasks.stream()
                 .collect(Collectors.groupingBy(Task::getStatus, Collectors.counting()));
@@ -430,7 +430,7 @@ public class ReportService {
         List<Bug> bugs = bugMapper.selectList(
                 new LambdaQueryWrapper<Bug>()
                         .eq(Bug::getProjectId, projectId)
-                        .eq(Bug::getIsDeleted, 0));
+                        .eq(Bug::getDeleted, 0));
 
         Map<String, Long> grouped = bugs.stream()
                 .collect(Collectors.groupingBy(Bug::getSeverity, Collectors.counting()));

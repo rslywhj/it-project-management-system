@@ -362,7 +362,7 @@ public class TestService {
         int totalCases = testCaseMapper.selectCount(
                 new LambdaQueryWrapper<TestCase>()
                         .eq(TestCase::getProjectId, plan.getProjectId())
-                        .eq(TestCase::getIsDeleted, 0)).intValue();
+                        .eq(TestCase::getDeleted, 0)).intValue();
 
         plan.setTotalCases(totalCases);
         plan.setExecutedCases(executions.size());

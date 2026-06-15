@@ -40,6 +40,7 @@
         <module>pm-report</module>
         <module>pm-lowcode</module>
         <module>pm-integration</module>
+        <module>pm-test</module>
         <module>pm-boot</module>
     </modules>
 
@@ -104,6 +105,11 @@
             <dependency>
                 <groupId>com.pm</groupId>
                 <artifactId>pm-integration</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.pm</groupId>
+                <artifactId>pm-test</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

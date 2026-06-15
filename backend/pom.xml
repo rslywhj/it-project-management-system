@@ -41,6 +41,9 @@
         <module>pm-lowcode</module>
         <module>pm-integration</module>
         <module>pm-test</module>
+        <module>pm-knowledge</module>
+        <module>pm-resource</module>
+        <module>pm-risk</module>
         <module>pm-boot</module>
     </modules>
 
@@ -110,6 +113,21 @@
             <dependency>
                 <groupId>com.pm</groupId>
                 <artifactId>pm-test</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.pm</groupId>
+                <artifactId>pm-knowledge</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.pm</groupId>
+                <artifactId>pm-resource</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.pm</groupId>
+                <artifactId>pm-risk</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

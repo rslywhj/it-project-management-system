@@ -15,6 +15,9 @@ COPY pm-notification ./pm-notification
 COPY pm-report ./pm-report
 COPY pm-lowcode ./pm-lowcode
 COPY pm-integration ./pm-integration
+COPY pm-knowledge ./pm-knowledge
+COPY pm-resource ./pm-resource
+COPY pm-risk ./pm-risk
 COPY pm-boot ./pm-boot
 RUN mvn clean package -DskipTests
 

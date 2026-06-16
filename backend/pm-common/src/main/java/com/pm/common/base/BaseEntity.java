@@ -34,7 +34,7 @@ public abstract class BaseEntity implements Serializable {
     private Long updatedBy;
 
     @TableLogic
-    @TableField(fill = FieldFill.INSERT)
+    @TableField(value = "is_deleted", fill = FieldFill.INSERT)
     @Schema(description = "是否删除（0=未删除，1=已删除）")
     private Integer deleted;
 }

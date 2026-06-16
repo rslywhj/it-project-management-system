@@ -46,7 +46,7 @@ public class ProjectService {
             project.setProjectCode(generateProjectCode());
         }
 
-        project.setOwnerUserId(UserContext.getUserId());
+        project.setProjectManagerId(UserContext.getUserId());
         projectMapper.insert(project);
 
         // 将创建者设为项目经理
@@ -100,7 +100,7 @@ public class ProjectService {
         if (project == null) {
             throw new BusinessException(ResultCode.PROJECT_NOT_FOUND);
         }
-        BeanUtils.copyProperties(request, project, "id", "projectCode", "ownerUserId", "createdAt", "createdBy");
+        BeanUtils.copyProperties(request, project, "id", "projectCode", "projectManagerId", "createdAt", "createdBy");
         projectMapper.updateById(project);
         return getProject(projectId);
     }

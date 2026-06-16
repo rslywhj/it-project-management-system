@@ -44,6 +44,6 @@ public class Project extends BaseEntity {
     @Schema(description = "所属组织ID")
     private Long orgId;
 
-    @Schema(description = "创建人ID")
-    private Long ownerUserId;
+    @Schema(description = "项目负责人ID")
+    private Long projectManagerId;
 }

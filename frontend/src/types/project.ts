@@ -13,7 +13,7 @@ export interface Project {
   startDate?: string
   endDate?: string
   orgId?: number
-  ownerUserId: number
+  projectManagerId: number
   createdAt: string
   memberCount?: number
 }

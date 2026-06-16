@@ -2,12 +2,18 @@ package com.pm.auth.service;
 
 import com.pm.auth.dto.LoginRequest;
 import com.pm.auth.dto.TokenResponse;
+import com.pm.common.mapper.SysPermissionMapper;
 import com.pm.common.result.Result;
+import com.pm.common.util.UserContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -16,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final SysPermissionMapper sysPermissionMapper;
 
     @PostMapping("/login")
     @Operation(summary = "用户登录", description = "用户名密码登录，返回 JWT Token")
@@ -39,10 +46,25 @@ public class AuthController {
     @GetMapping("/me")
     @Operation(summary = "获取当前用户信息", description = "获取当前登录用户的详细信息")
     public Result<Object> getCurrentUser() {
-        var user = com.pm.common.util.UserContext.get();
+        UserContext.UserInfo user = UserContext.get();
         if (user == null) {
             return Result.fail(401, "未登录");
         }
-        return Result.ok(user);
+
+        // 查询用户的权限码列表
+        List<String> permissions = sysPermissionMapper.selectPermissionCodesByUserId(user.getUserId());
+        List<String> roles = sysPermissionMapper.selectRoleCodesByUserId(user.getUserId());
+
+        // 构建返回对象，兼容前端 UserInfo 接口
+        Map<String, Object> result = new HashMap<>();
+        result.put("userId", user.getUserId());
+        result.put("username", user.getUsername());
+        result.put("realName", user.getRealName() != null ? user.getRealName() : user.getUsername());
+        result.put("role", user.getRole());
+        result.put("roles", roles.isEmpty() ? List.of(user.getRole()) : roles);
+        result.put("permissions", permissions);
+        result.put("orgId", user.getOrgId());
+
+        return Result.ok(result);
     }
 }

@@ -23,9 +23,9 @@ public class AuthService {
 
     // TODO: 替换为数据库查询
     private static final String DEFAULT_USERNAME = "admin";
-    private static final String DEFAULT_PASSWORD = "$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt6Z5EH"; // 123456
+    private static final String DEFAULT_PASSWORD = "$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi"; // Admin@123456
     private static final Long DEFAULT_USER_ID = 1L;
-    private static final String DEFAULT_ROLE = "SYSTEM_ADMIN";
+    private static final String DEFAULT_ROLE = "super_admin";  // 与数据库一致
     private static final String DEFAULT_REAL_NAME = "系统管理员";
 
     /**
@@ -37,9 +37,10 @@ public class AuthService {
             throw new BusinessException(ResultCode.USER_NOT_FOUND);
         }
 
-        // TODO: 校验密码（初期开发环境允许明文）
-        // 临时逻辑：开发环境允许 admin/123456 直接登录
-        if (!"123456".equals(request.getPassword())) {
+        // 校验密码（BCrypt加密）
+        // 开发环境临时逻辑：允许 admin/Admin@123456 登录
+        if (!passwordEncoder.matches(request.getPassword(), DEFAULT_PASSWORD)
+                && !"Admin@123456".equals(request.getPassword())) {
             throw new BusinessException(ResultCode.USER_PASSWORD_ERROR);
         }
 

@@ -92,7 +92,18 @@ INSERT INTO `sys_permission` (`id`, `permission_code`, `permission_name`, `modul
 (43, 'system:permission','权限管理',       'system',     'manage',  '权限管理',               43),
 (44, 'system:dict',      '字典管理',       'system',     'manage',  '数据字典管理',             44),
 (45, 'system:org',       '组织管理',       'system',     'manage',  '组织管理',               45),
-(46, 'system:log',       '日志查看',       'system',     'view',    '操作日志查看',             46);
+(46, 'system:log',       '日志查看',       'system',     'view',    '操作日志查看',             46),
+-- 风险管理（risk）
+(47, 'risk:view',        '查看风险',       'risk',       'view',    '查看风险列表和详情',        47),
+(48, 'risk:create',      '创建风险',       'risk',       'create',  '创建风险',               48),
+(49, 'risk:edit',        '编辑风险',       'risk',       'edit',    '编辑风险',               49),
+(50, 'risk:delete',      '删除风险',       'risk',       'delete',  '删除风险',               50),
+-- 资源管理（resource）
+(51, 'resource:view',    '查看资源',       'resource',   'view',    '查看资源和工时',            51),
+(52, 'resource:manage',  '管理资源',       'resource',   'manage',  '资源分配和工时管理',         52),
+-- 知识库（knowledge）
+(53, 'knowledge:view',   '查看知识库',     'knowledge',  'view',    '查看知识库文章',            53),
+(54, 'knowledge:manage', '管理知识库',     'knowledge',  'manage',  '创建和编辑知识库文章',       54);
 
 -- ============================================================
 -- 第三部分：角色-权限映射
@@ -137,7 +148,13 @@ INSERT INTO `sys_role_permission` (`role_id`, `permission_id`) VALUES
 -- promotion: view/create/edit/delete/manage
 (@role_project_admin, 34), (@role_project_admin, 35), (@role_project_admin, 36), (@role_project_admin, 37), (@role_project_admin, 38),
 -- report: view/manage
-(@role_project_admin, 39), (@role_project_admin, 40);
+(@role_project_admin, 39), (@role_project_admin, 40),
+-- risk: view/create/edit/delete
+(@role_project_admin, 47), (@role_project_admin, 48), (@role_project_admin, 49), (@role_project_admin, 50),
+-- resource: view/manage
+(@role_project_admin, 51), (@role_project_admin, 52),
+-- knowledge: view/manage
+(@role_project_admin, 53), (@role_project_admin, 54);
 
 -- -----------------------------------------------------------
 -- 项目经理（role_id=3）
@@ -160,7 +177,13 @@ INSERT INTO `sys_role_permission` (`role_id`, `permission_id`) VALUES
 -- promotion: view/create/edit
 (@role_project_manager, 34), (@role_project_manager, 35), (@role_project_manager, 36),
 -- report: view
-(@role_project_manager, 39);
+(@role_project_manager, 39),
+-- risk: view/create/edit
+(@role_project_manager, 47), (@role_project_manager, 48), (@role_project_manager, 49),
+-- resource: view
+(@role_project_manager, 51),
+-- knowledge: view
+(@role_project_manager, 53);
 
 -- -----------------------------------------------------------
 -- 推广管理员（role_id=4）
@@ -183,7 +206,11 @@ INSERT INTO `sys_role_permission` (`role_id`, `permission_id`) VALUES
 -- promotion: view/create/edit/delete/manage
 (@role_promotion_manager, 34), (@role_promotion_manager, 35), (@role_promotion_manager, 36), (@role_promotion_manager, 37), (@role_promotion_manager, 38),
 -- report: view
-(@role_promotion_manager, 39);
+(@role_promotion_manager, 39),
+-- risk: view
+(@role_promotion_manager, 47),
+-- knowledge: view
+(@role_promotion_manager, 53);
 
 -- -----------------------------------------------------------
 -- 推广单元负责人（role_id=5）
@@ -206,7 +233,11 @@ INSERT INTO `sys_role_permission` (`role_id`, `permission_id`) VALUES
 -- promotion: view/edit（本单元）
 (@role_promotion_unit_lead, 34), (@role_promotion_unit_lead, 36),
 -- report: view
-(@role_promotion_unit_lead, 39);
+(@role_promotion_unit_lead, 39),
+-- risk: view
+(@role_promotion_unit_lead, 47),
+-- knowledge: view
+(@role_promotion_unit_lead, 53);
 
 -- -----------------------------------------------------------
 -- 产品经理（role_id=6）
@@ -229,7 +260,11 @@ INSERT INTO `sys_role_permission` (`role_id`, `permission_id`) VALUES
 -- promotion: view
 (@role_product_manager, 34),
 -- report: view
-(@role_product_manager, 39);
+(@role_product_manager, 39),
+-- risk: view
+(@role_product_manager, 47),
+-- knowledge: view
+(@role_product_manager, 53);
 
 -- -----------------------------------------------------------
 -- 开发人员（role_id=7）
@@ -252,7 +287,13 @@ INSERT INTO `sys_role_permission` (`role_id`, `permission_id`) VALUES
 -- promotion: view
 (@role_developer, 34),
 -- report: view
-(@role_developer, 39);
+(@role_developer, 39),
+-- risk: view
+(@role_developer, 47),
+-- resource: view
+(@role_developer, 51),
+-- knowledge: view
+(@role_developer, 53);
 
 -- -----------------------------------------------------------
 -- 测试人员（role_id=8）
@@ -275,7 +316,11 @@ INSERT INTO `sys_role_permission` (`role_id`, `permission_id`) VALUES
 -- promotion: view
 (@role_tester, 34),
 -- report: view
-(@role_tester, 39);
+(@role_tester, 39),
+-- risk: view
+(@role_tester, 47),
+-- knowledge: view
+(@role_tester, 53);
 
 -- -----------------------------------------------------------
 -- 外部协作者（role_id=9）
@@ -296,7 +341,11 @@ INSERT INTO `sys_role_permission` (`role_id`, `permission_id`) VALUES
 -- test: view/create/edit
 (@role_external, 29), (@role_external, 30), (@role_external, 31),
 -- report: view
-(@role_external, 39);
+(@role_external, 39),
+-- risk: view
+(@role_external, 47),
+-- knowledge: view
+(@role_external, 53);
 
 -- -----------------------------------------------------------
 -- 访客（role_id=10）：仅view权限
@@ -310,7 +359,9 @@ INSERT INTO `sys_role_permission` (`role_id`, `permission_id`) VALUES
 (@role_guest, 24),  -- delivery:view
 (@role_guest, 29),  -- test:view
 (@role_guest, 34),  -- promotion:view
-(@role_guest, 39);  -- report:view
+(@role_guest, 39),  -- report:view
+(@role_guest, 47),  -- risk:view
+(@role_guest, 53);  -- knowledge:view
 
 -- ============================================================
 -- 第四部分：超级管理员账号初始化

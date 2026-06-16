@@ -1,6 +1,8 @@
 package com.pm.auth.filter;
 
 import com.pm.auth.config.JwtTokenProvider;
+import com.pm.common.entity.SysUser;
+import com.pm.common.mapper.SysUserMapper;
 import com.pm.common.util.UserContext;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -27,6 +29,7 @@ import java.util.Collections;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final SysUserMapper sysUserMapper;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -39,10 +42,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String role = jwtTokenProvider.getRoleFromToken(token);
                 String username = jwtTokenProvider.parseToken(token).getSubject();
 
+                // 从数据库查询用户真实姓名
+                String realName = username;
+                try {
+                    SysUser sysUser = sysUserMapper.selectById(userId);
+                    if (sysUser != null && sysUser.getRealName() != null) {
+                        realName = sysUser.getRealName();
+                    }
+                } catch (Exception e) {
+                    log.warn("Failed to query user realName from database", e);
+                }
+
                 // 设置 UserContext
                 UserContext.UserInfo userInfo = new UserContext.UserInfo();
                 userInfo.setUserId(userId);
                 userInfo.setUsername(username);
+                userInfo.setRealName(realName);
                 userInfo.setRole(role);
                 UserContext.set(userInfo);
 

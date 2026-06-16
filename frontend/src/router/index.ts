@@ -207,13 +207,13 @@ const businessRoutes: RouteRecordRaw[] = [
       {
         path: 'user',
         name: 'UserManage',
-        component: () => import('@/views/dashboard/DashboardView.vue'), // TODO: 替换为用户管理页
+        component: () => import('@/views/system/UserListView.vue'),
         meta: { title: '用户管理', icon: 'User', permissions: ['system:user'] },
       },
       {
         path: 'role',
         name: 'RoleManage',
-        component: () => import('@/views/dashboard/DashboardView.vue'), // TODO: 替换为角色管理页
+        component: () => import('@/views/system/RoleListView.vue'),
         meta: { title: '角色管理', icon: 'UserFilled', permissions: ['system:role'] },
       },
     ],

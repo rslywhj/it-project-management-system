@@ -7,12 +7,12 @@
           <div class="stat-content">
             <div class="stat-info">
               <span class="label">需求总数</span>
-              <span class="value">{{ stats.requirementStats.total }}</span>
+              <span class="value">{{ dashboard.requirementStats?.total ?? 0 }}</span>
             </div>
             <el-icon :size="36" color="#409eff"><Document /></el-icon>
           </div>
           <div class="stat-footer">
-            完成率 {{ stats.requirementStats.completionRate }}%
+            完成率 {{ dashboard.requirementStats?.completionRate ?? 0 }}%
           </div>
         </el-card>
       </el-col>
@@ -21,12 +21,12 @@
           <div class="stat-content">
             <div class="stat-info">
               <span class="label">任务总数</span>
-              <span class="value">{{ stats.taskStats.total }}</span>
+              <span class="value">{{ dashboard.taskStats?.total ?? 0 }}</span>
             </div>
             <el-icon :size="36" color="#67c23a"><Finished /></el-icon>
           </div>
           <div class="stat-footer">
-            完成率 {{ stats.taskStats.completionRate }}%
+            完成率 {{ dashboard.taskStats?.completionRate ?? 0 }}%
           </div>
         </el-card>
       </el-col>
@@ -34,13 +34,13 @@
         <el-card shadow="hover" class="stat-card">
           <div class="stat-content">
             <div class="stat-info">
-              <span class="label">里程碑</span>
-              <span class="value">{{ stats.milestoneStats.total }}</span>
+              <span class="label">缺陷总数</span>
+              <span class="value">{{ dashboard.bugStats?.total ?? 0 }}</span>
             </div>
-            <el-icon :size="36" color="#e6a23c"><Flag /></el-icon>
+            <el-icon :size="36" color="#f56c6c"><Warning /></el-icon>
           </div>
           <div class="stat-footer">
-            已完成 {{ stats.milestoneStats.completed }}，延期 {{ stats.milestoneStats.overdue.length }}
+            未解决 {{ dashboard.bugStats?.open ?? 0 }}，严重 {{ dashboard.bugStats?.criticalCount ?? 0 }}
           </div>
         </el-card>
       </el-col>
@@ -48,13 +48,13 @@
         <el-card shadow="hover" class="stat-card">
           <div class="stat-content">
             <div class="stat-info">
-              <span class="label">整体进度</span>
-              <span class="value">{{ stats.stats.overallProgress }}%</span>
+              <span class="label">健康度</span>
+              <span class="value">{{ dashboard.healthScore ?? 0 }}</span>
             </div>
-            <el-icon :size="36" color="#909399"><TrendCharts /></el-icon>
+            <el-icon :size="36" :color="healthColor"><TrendCharts /></el-icon>
           </div>
           <div class="stat-footer">
-            {{ stats.stats.totalMembers }} 名成员参与
+            里程碑 {{ dashboard.milestoneStats?.total ?? 0 }}，延期 {{ dashboard.milestoneStats?.delayed ?? 0 }}
           </div>
         </el-card>
       </el-col>
@@ -90,14 +90,13 @@
       </el-col>
       <el-col :span="8">
         <el-card shadow="never">
-          <template #header><span>即将到期里程碑</span></template>
-          <div v-if="stats.milestoneStats.upcoming.length > 0">
-            <div v-for="m in stats.milestoneStats.upcoming" :key="m.id" class="milestone-item">
-              <div class="milestone-name">{{ m.name }}</div>
-              <div class="milestone-date">{{ m.plannedDate }}</div>
-            </div>
+          <template #header><span>里程碑概览</span></template>
+          <div class="milestone-summary">
+            <div class="milestone-row"><span>待开始</span><span class="count">{{ dashboard.milestoneStats?.pending ?? 0 }}</span></div>
+            <div class="milestone-row"><span>已完成</span><span class="count success">{{ dashboard.milestoneStats?.completed ?? 0 }}</span></div>
+            <div class="milestone-row"><span>延期</span><span class="count danger">{{ dashboard.milestoneStats?.delayed ?? 0 }}</span></div>
+            <div class="milestone-row"><span>有风险</span><span class="count warning">{{ dashboard.milestoneStats?.atRisk ?? 0 }}</span></div>
           </div>
-          <el-empty v-else description="暂无即将到期的里程碑" :image-size="60" />
         </el-card>
       </el-col>
     </el-row>
@@ -105,14 +104,14 @@
     <!-- 最近活动 -->
     <el-card shadow="never">
       <template #header><span>最近活动</span></template>
-      <el-timeline v-if="stats.recentActivities.length > 0">
+      <el-timeline v-if="dashboard.recentActivities?.length">
         <el-timeline-item
-          v-for="activity in stats.recentActivities"
-          :key="activity.id"
-          :timestamp="activity.createdAt"
+          v-for="(activity, idx) in dashboard.recentActivities"
+          :key="idx"
+          :timestamp="activity.time"
           placement="top"
         >
-          <span class="activity-user">{{ activity.userName }}</span>
+          <span class="activity-user">{{ activity.operator }}</span>
           <span class="activity-title">{{ activity.title }}</span>
         </el-timeline-item>
       </el-timeline>
@@ -122,7 +121,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, reactive, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import * as echarts from 'echarts'
 import { getProjectDashboard, getBurndownData } from '@/api/report'
 import type { ProjectDashboard, BurndownData } from '@/types/report'
@@ -130,14 +129,23 @@ import type { ProjectDashboard, BurndownData } from '@/types/report'
 const props = defineProps<{ projectId: number }>()
 
 const loading = ref(false)
-const stats = reactive<ProjectDashboard>({
+const dashboard = reactive<ProjectDashboard>({
   projectId: 0,
   projectName: '',
-  stats: { totalRequirements: 0, totalTasks: 0, totalMilestones: 0, totalMembers: 0, overallProgress: 0 },
-  requirementStats: { total: 0, byStatus: {}, completionRate: 0 },
-  taskStats: { total: 0, byStatus: {}, completionRate: 0 },
-  milestoneStats: { total: 0, completed: 0, upcoming: [], overdue: [] },
+  projectStatus: '',
+  requirementStats: { total: 0, draft: 0, reviewing: 0, approved: 0, scheduled: 0, done: 0, completionRate: 0 },
+  taskStats: { total: 0, todo: 0, inProgress: 0, done: 0, completionRate: 0, averageProgress: 0 },
+  bugStats: { total: 0, open: 0, inProgress: 0, resolved: 0, closed: 0, criticalCount: 0, majorCount: 0 },
+  milestoneStats: { total: 0, pending: 0, completed: 0, delayed: 0, atRisk: 0 },
+  healthScore: 0,
   recentActivities: [],
+})
+
+const healthColor = computed(() => {
+  const s = dashboard.healthScore ?? 0
+  if (s >= 80) return '#67c23a'
+  if (s >= 60) return '#e6a23c'
+  return '#f56c6c'
 })
 
 const reqChartRef = ref<HTMLElement | null>(null)
@@ -149,46 +157,44 @@ let taskChart: echarts.ECharts | null = null
 let burndownChart: echarts.ECharts | null = null
 
 const reqStatusMap: Record<string, string> = {
-  draft: '草稿', reviewing: '评审中', approved: '已通过', rejected: '已驳回', scheduled: '已排期', done: '已完成',
+  draft: '草稿', reviewing: '评审中', approved: '已通过', scheduled: '已排期', done: '已完成',
 }
 const reqColorMap: Record<string, string> = {
-  draft: '#909399', reviewing: '#e6a23c', approved: '#67c23a', rejected: '#f56c6c', scheduled: '#409eff', done: '#67c23a',
+  draft: '#909399', reviewing: '#e6a23c', approved: '#67c23a', scheduled: '#409eff', done: '#67c23a',
 }
-const taskStatusMap: Record<string, string> = { todo: '待办', in_progress: '进行中', done: '已完成' }
-const taskColorMap: Record<string, string> = { todo: '#909399', in_progress: '#e6a23c', done: '#67c23a' }
+const taskStatusMap: Record<string, string> = { todo: '待办', inProgress: '进行中', done: '已完成' }
+const taskColorMap: Record<string, string> = { todo: '#909399', inProgress: '#e6a23c', done: '#67c23a' }
 
 function initCharts() {
-  if (reqChartRef.value) {
+  if (reqChartRef.value && dashboard.requirementStats) {
     reqChart = echarts.init(reqChartRef.value)
-    const data = Object.entries(stats.requirementStats.byStatus).map(([key, value]) => ({
-      name: reqStatusMap[key] ?? key,
-      value,
-      itemStyle: { color: reqColorMap[key] ?? '#409eff' },
-    }))
+    const rs = dashboard.requirementStats
+    const data = [
+      { name: '草稿', value: rs.draft, itemStyle: { color: '#909399' } },
+      { name: '评审中', value: rs.reviewing, itemStyle: { color: '#e6a23c' } },
+      { name: '已通过', value: rs.approved, itemStyle: { color: '#67c23a' } },
+      { name: '已排期', value: rs.scheduled, itemStyle: { color: '#409eff' } },
+      { name: '已完成', value: rs.done, itemStyle: { color: '#67c23a' } },
+    ].filter(d => d.value > 0)
     reqChart.setOption({
       tooltip: { trigger: 'item' },
       legend: { bottom: 0 },
-      series: [{
-        type: 'pie', radius: ['40%', '70%'], center: ['50%', '45%'],
-        data, label: { show: true, formatter: '{b}: {c}' },
-      }],
+      series: [{ type: 'pie', radius: ['40%', '70%'], center: ['50%', '45%'], data, label: { show: true, formatter: '{b}: {c}' } }],
     })
   }
 
-  if (taskChartRef.value) {
+  if (taskChartRef.value && dashboard.taskStats) {
     taskChart = echarts.init(taskChartRef.value)
-    const data = Object.entries(stats.taskStats.byStatus).map(([key, value]) => ({
-      name: taskStatusMap[key] ?? key,
-      value,
-      itemStyle: { color: taskColorMap[key] ?? '#409eff' },
-    }))
+    const ts = dashboard.taskStats
+    const data = [
+      { name: '待办', value: ts.todo, itemStyle: { color: '#909399' } },
+      { name: '进行中', value: ts.inProgress, itemStyle: { color: '#e6a23c' } },
+      { name: '已完成', value: ts.done, itemStyle: { color: '#67c23a' } },
+    ].filter(d => d.value > 0)
     taskChart.setOption({
       tooltip: { trigger: 'item' },
       legend: { bottom: 0 },
-      series: [{
-        type: 'pie', radius: ['40%', '70%'], center: ['50%', '45%'],
-        data, label: { show: true, formatter: '{b}: {c}' },
-      }],
+      series: [{ type: 'pie', radius: ['40%', '70%'], center: ['50%', '45%'], data, label: { show: true, formatter: '{b}: {c}' } }],
     })
   }
 }
@@ -203,14 +209,17 @@ async function refreshBurndown() {
 function renderBurndown(data: BurndownData) {
   if (!burndownChartRef.value) return
   if (!burndownChart) burndownChart = echarts.init(burndownChartRef.value)
+  const dates = (data.idealLine ?? []).map(p => p.date)
+  const ideal = (data.idealLine ?? []).map(p => p.remaining)
+  const actual = (data.actualLine ?? []).map(p => p.remaining)
   burndownChart.setOption({
     tooltip: { trigger: 'axis' },
     legend: { data: ['理想线', '实际线'] },
-    xAxis: { type: 'category', data: data.dates },
+    xAxis: { type: 'category', data: dates },
     yAxis: { type: 'value', name: '剩余任务数' },
     series: [
-      { name: '理想线', type: 'line', data: data.ideal, lineStyle: { type: 'dashed' }, itemStyle: { color: '#909399' } },
-      { name: '实际线', type: 'line', data: data.actual, itemStyle: { color: '#409eff' }, areaStyle: { color: 'rgba(64,158,255,0.1)' } },
+      { name: '理想线', type: 'line', data: ideal, lineStyle: { type: 'dashed' }, itemStyle: { color: '#909399' } },
+      { name: '实际线', type: 'line', data: actual, itemStyle: { color: '#409eff' }, areaStyle: { color: 'rgba(64,158,255,0.1)' } },
     ],
   })
 }
@@ -219,7 +228,7 @@ async function loadData() {
   loading.value = true
   try {
     const data = await getProjectDashboard(props.projectId)
-    Object.assign(stats, data)
+    Object.assign(dashboard, data)
     await nextTick()
     initCharts()
     refreshBurndown()
@@ -252,14 +261,12 @@ onBeforeUnmount(() => {
     align-items: center;
     justify-content: space-between;
   }
-
   .stat-info {
     display: flex;
     flex-direction: column;
     .label { font-size: 14px; color: #909399; }
     .value { font-size: 28px; font-weight: 600; color: #303133; margin-top: 4px; }
   }
-
   .stat-footer {
     margin-top: 8px;
     padding-top: 8px;
@@ -275,12 +282,20 @@ onBeforeUnmount(() => {
   align-items: center;
 }
 
-.milestone-item {
-  padding: 8px 0;
-  border-bottom: 1px solid #f0f0f0;
-  &:last-child { border-bottom: none; }
-  .milestone-name { font-size: 14px; color: #303133; }
-  .milestone-date { font-size: 12px; color: #909399; margin-top: 2px; }
+.milestone-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.milestone-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #606266;
+  .count { font-weight: 600; }
+  .count.success { color: #67c23a; }
+  .count.danger { color: #f56c6c; }
+  .count.warning { color: #e6a23c; }
 }
 
 .activity-user { font-weight: 500; margin-right: 8px; }

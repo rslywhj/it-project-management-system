@@ -1,85 +1,106 @@
-/** 项目看板数据 */
-export interface ProjectDashboard {
-  projectId: number
-  projectName: string
-  stats: ProjectStats
-  requirementStats: ModuleStats
-  taskStats: ModuleStats
-  milestoneStats: MilestoneStats
-  recentActivities: Activity[]
-}
-
-/** 项目统计 */
-export interface ProjectStats {
-  totalRequirements: number
-  totalTasks: number
-  totalMilestones: number
-  totalMembers: number
-  overallProgress: number
-}
-
-/** 模块统计 */
-export interface ModuleStats {
+/** 需求统计 */
+export interface RequirementStats {
   total: number
-  byStatus: Record<string, number>
+  draft: number
+  reviewing: number
+  approved: number
+  scheduled: number
+  done: number
   completionRate: number
+}
+
+/** 任务统计 */
+export interface TaskStats {
+  total: number
+  todo: number
+  inProgress: number
+  done: number
+  completionRate: number
+  averageProgress: number
+}
+
+/** 缺陷统计 */
+export interface BugStats {
+  total: number
+  open: number
+  inProgress: number
+  resolved: number
+  closed: number
+  criticalCount: number
+  majorCount: number
 }
 
 /** 里程碑统计 */
 export interface MilestoneStats {
   total: number
+  pending: number
   completed: number
-  upcoming: MilestoneItem[]
-  overdue: MilestoneItem[]
+  delayed: number
+  atRisk: number
 }
 
-/** 里程碑简项 */
-export interface MilestoneItem {
-  id: number
-  name: string
-  plannedDate: string
-  status: string
-}
-
-/** 最近活动 */
-export interface Activity {
-  id: number
+/** 近期活动 */
+export interface RecentActivity {
   type: string
   title: string
-  userName: string
-  createdAt: string
+  operator: string
+  time: string
+}
+
+/** 项目看板数据 */
+export interface ProjectDashboard {
+  projectId: number
+  projectName: string
+  projectStatus: string
+  requirementStats: RequirementStats
+  taskStats: TaskStats
+  bugStats: BugStats
+  milestoneStats: MilestoneStats
+  healthScore: number
+  recentActivities: RecentActivity[]
 }
 
 /** 甘特图数据 */
 export interface GanttData {
+  projectId: number
   tasks: GanttTask[]
+  dependencies: GanttDependency[]
 }
 
 /** 甘特图任务 */
 export interface GanttTask {
   id: number
   text: string
-  start_date: string
-  end_date: string
+  start: string
+  end: string
   progress: number
-  parent: number
+  parent?: number
   type?: string
+  open?: boolean
+  assignee?: string
+}
+
+/** 甘特图依赖 */
+export interface GanttDependency {
+  id: number
+  source: number
+  target: number
+  type: string
 }
 
 /** 燃尽图数据 */
 export interface BurndownData {
-  dates: string[]
-  ideal: number[]
-  actual: number[]
+  projectId: number
+  iteration?: string
+  startDate?: string
+  endDate?: string
+  totalTasks: number
+  idealLine: BurndownPoint[]
+  actualLine: BurndownPoint[]
 }
 
-/** 工时统计 */
-export interface WorkloadData {
-  userId: number
-  userName: string
-  totalTasks: number
-  completedTasks: number
-  inProgressTasks: number
-  estimatedHours: number
-  actualHours: number
+/** 燃尽点 */
+export interface BurndownPoint {
+  date: string
+  remaining: number
 }

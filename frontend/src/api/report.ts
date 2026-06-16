@@ -1,5 +1,5 @@
 import service from './index'
-import type { ProjectDashboard, GanttData, BurndownData, WorkloadData } from '@/types/report'
+import type { ProjectDashboard, GanttData, BurndownData } from '@/types/report'
 
 /** 获取项目看板数据 */
 export function getProjectDashboard(projectId: number) {
@@ -14,9 +14,4 @@ export function getGanttData(projectId: number) {
 /** 获取燃尽图数据 */
 export function getBurndownData(projectId: number) {
   return service.get<any, BurndownData>(`/projects/${projectId}/burndown`)
-}
-
-/** 获取团队工时统计 */
-export function getWorkloadData(projectId: number) {
-  return service.get<any, WorkloadData[]>(`/projects/${projectId}/workload`)
 }

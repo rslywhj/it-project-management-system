@@ -9,11 +9,11 @@
           <el-option label="已解决" value="resolved" />
           <el-option label="已关闭" value="closed" />
         </el-select>
-        <el-select v-model="queryParams.priority" placeholder="优先级" clearable style="width: 100px" @change="handleSearch">
-          <el-option label="紧急" value="critical" />
-          <el-option label="高" value="high" />
-          <el-option label="中" value="medium" />
-          <el-option label="低" value="low" />
+        <el-select v-model="queryParams.severity" placeholder="严重程度" clearable style="width: 100px" @change="handleSearch">
+          <el-option label="严重" value="critical" />
+          <el-option label="一般" value="major" />
+          <el-option label="次要" value="minor" />
+          <el-option label="轻微" value="trivial" />
         </el-select>
       </div>
       <el-button type="primary" size="small" @click="handleCreate">
@@ -23,9 +23,9 @@
 
     <el-table v-loading="loading" :data="issueList" stripe>
       <el-table-column prop="title" label="问题标题" min-width="220" />
-      <el-table-column prop="priority" label="优先级" width="80">
+      <el-table-column prop="severity" label="严重程度" width="90">
         <template #default="{ row }">
-          <el-tag :type="priorityType(row.priority)" size="small">{{ priorityLabel(row.priority) }}</el-tag>
+          <el-tag :type="severityType(row.severity)" size="small">{{ severityLabel(row.severity) }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="status" label="状态" width="90">
@@ -33,7 +33,6 @@
           <el-tag :type="issueStatusType(row.status)" size="small">{{ issueStatusLabel(row.status) }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="assigneeName" label="处理人" width="100" />
       <el-table-column prop="dueDate" label="截止日期" width="110" />
       <el-table-column prop="createdAt" label="创建时间" width="170" />
       <el-table-column label="操作" width="220" fixed="right">
@@ -60,16 +59,22 @@
           <el-input v-model="formData.description" type="textarea" :rows="3" placeholder="问题描述" />
         </el-form-item>
         <el-form-item label="分类">
-          <el-input v-model="formData.category" placeholder="如：技术问题、需求变更、资源冲突" />
+          <el-select v-model="formData.category" placeholder="选择分类">
+            <el-option label="技术" value="technical" />
+            <el-option label="流程" value="process" />
+            <el-option label="资源" value="resource" />
+            <el-option label="沟通" value="communication" />
+            <el-option label="其他" value="other" />
+          </el-select>
         </el-form-item>
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="优先级">
-              <el-select v-model="formData.priority">
-                <el-option label="紧急" value="critical" />
-                <el-option label="高" value="high" />
-                <el-option label="中" value="medium" />
-                <el-option label="低" value="low" />
+            <el-form-item label="严重程度">
+              <el-select v-model="formData.severity">
+                <el-option label="严重" value="critical" />
+                <el-option label="一般" value="major" />
+                <el-option label="次要" value="minor" />
+                <el-option label="轻微" value="trivial" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -104,7 +109,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
-import { getIssueList, createIssue, updateIssue, deleteIssue, resolveIssue, closeIssue } from '@/api/risk'
+import { getIssueList, createIssue, updateIssue, deleteIssue, updateIssueStatus } from '@/api/risk'
 import type { Issue, IssueCreateRequest } from '@/types/risk'
 
 const props = defineProps<{ projectId: number }>()
@@ -112,27 +117,27 @@ const props = defineProps<{ projectId: number }>()
 const loading = ref(false)
 const issueList = ref<Issue[]>([])
 const total = ref(0)
-const queryParams = reactive({ page: 1, size: 10, keyword: '', status: '', priority: '' })
+const queryParams = reactive({ page: 1, size: 10, keyword: '', status: '', severity: '' })
 
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 const submitLoading = ref(false)
 const formRef = ref<FormInstance>()
 const editingId = ref<number | null>(null)
-const formData = reactive<IssueCreateRequest>({ title: '', description: '', category: '', priority: 'medium', dueDate: '' })
+const formData = reactive<IssueCreateRequest>({ title: '', description: '', category: 'technical', severity: 'major', dueDate: '' })
 const formRules: FormRules = { title: [{ required: true, message: '请输入问题标题', trigger: 'blur' }] }
 
 const resolveDialogVisible = ref(false)
 const resolvingId = ref<number | null>(null)
 const resolution = ref('')
 
-const priorityMap: Record<string, string> = { critical: '紧急', high: '高', medium: '中', low: '低' }
-const priorityTypeMap: Record<string, 'danger' | 'warning' | 'info'> = { critical: 'danger', high: 'warning', medium: 'info', low: 'info' }
-const issueStatusLabelMap: Record<string, string> = { open: '待处理', in_progress: '处理中', resolved: '已解决', closed: '已关闭' }
-const issueStatusTypeMap: Record<string, 'info' | 'warning' | 'success' | 'danger'> = { open: 'danger', in_progress: 'warning', resolved: 'success', closed: 'info' }
+const severityMap: Record<string, string> = { critical: '严重', major: '一般', minor: '次要', trivial: '轻微' }
+const severityTypeMap: Record<string, 'danger' | 'warning' | 'info'> = { critical: 'danger', major: 'warning', minor: 'info', trivial: 'info' }
+const issueStatusLabelMap: Record<string, string> = { open: '待处理', in_progress: '处理中', resolved: '已解决', closed: '已关闭', reopen: '重新打开' }
+const issueStatusTypeMap: Record<string, 'info' | 'warning' | 'success' | 'danger'> = { open: 'danger', in_progress: 'warning', resolved: 'success', closed: 'info', reopen: 'danger' }
 
-function priorityLabel(p: string) { return priorityMap[p] ?? p }
-function priorityType(p: string): 'danger' | 'warning' | 'info' { return priorityTypeMap[p] ?? 'info' }
+function severityLabel(s: string) { return severityMap[s] ?? s }
+function severityType(s: string): 'danger' | 'warning' | 'info' { return severityTypeMap[s] ?? 'info' }
 function issueStatusLabel(s: string) { return issueStatusLabelMap[s] ?? s }
 function issueStatusType(s: string): 'info' | 'warning' | 'success' | 'danger' { return issueStatusTypeMap[s] ?? 'info' }
 
@@ -150,14 +155,14 @@ function handleSearch() { queryParams.page = 1; loadData() }
 function handleCreate() {
   isEdit.value = false
   editingId.value = null
-  Object.assign(formData, { title: '', description: '', category: '', priority: 'medium', dueDate: '' })
+  Object.assign(formData, { title: '', description: '', category: 'technical', severity: 'major', dueDate: '' })
   dialogVisible.value = true
 }
 
 function handleEdit(row: Issue) {
   isEdit.value = true
   editingId.value = row.id
-  Object.assign(formData, { title: row.title, description: row.description, category: row.category, priority: row.priority, dueDate: row.dueDate })
+  Object.assign(formData, { title: row.title, description: row.description, category: row.category, severity: row.severity, dueDate: row.dueDate })
   dialogVisible.value = true
 }
 
@@ -187,7 +192,7 @@ function handleResolve(row: Issue) {
 async function handleResolveSubmit() {
   if (!resolvingId.value) return
   try {
-    await resolveIssue(resolvingId.value, resolution.value)
+    await updateIssueStatus(resolvingId.value, { status: 'resolved', resolution: resolution.value })
     ElMessage.success('问题已解决')
     resolveDialogVisible.value = false
     loadData()
@@ -197,7 +202,7 @@ async function handleResolveSubmit() {
 async function handleCloseIssue(row: Issue) {
   try {
     await ElMessageBox.confirm(`确定关闭问题「${row.title}」？`, '提示', { type: 'warning' })
-    await closeIssue(row.id)
+    await updateIssueStatus(row.id, { status: 'closed' })
     ElMessage.success('问题已关闭')
     loadData()
   } catch { /* cancelled */ }

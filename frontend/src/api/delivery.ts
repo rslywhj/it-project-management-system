@@ -10,7 +10,7 @@ export function createDelivery(projectId: number, data: DeliveryCreateRequest) {
 /** 获取交付物列表 */
 export function getDeliveryList(
   projectId: number,
-  params: PageParams & { status?: string; type?: string; keyword?: string },
+  params: PageParams & { status?: string; milestoneId?: number; keyword?: string },
 ) {
   return service.get<any, PageResult<Delivery>>(`/projects/${projectId}/deliveries`, { params })
 }
@@ -21,7 +21,7 @@ export function getDeliveryDetail(id: number) {
 }
 
 /** 更新交付物 */
-export function updateDelivery(id: number, data: Partial<Delivery>) {
+export function updateDelivery(id: number, data: DeliveryCreateRequest) {
   return service.put<any, Delivery>(`/deliveries/${id}`, data)
 }
 
@@ -32,15 +32,15 @@ export function deleteDelivery(id: number) {
 
 /** 提交审核 */
 export function submitDelivery(id: number) {
-  return service.put<any, Delivery>(`/deliveries/${id}/submit`)
+  return service.post<any, Delivery>(`/deliveries/${id}/submit`)
 }
 
 /** 审核交付物 */
 export function reviewDelivery(id: number, data: DeliveryReviewRequest) {
-  return service.put<any, Delivery>(`/deliveries/${id}/review`, data)
+  return service.post<any, Delivery>(`/deliveries/${id}/review`, data)
 }
 
 /** 创建新版本 */
 export function createDeliveryVersion(id: number, data: DeliveryCreateRequest) {
-  return service.post<any, Delivery>(`/deliveries/${id}/versions`, data)
+  return service.post<any, Delivery>(`/deliveries/${id}/new-version`, data)
 }

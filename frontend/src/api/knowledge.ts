@@ -1,24 +1,6 @@
 import service from './index'
 import type { PageParams, PageResult } from '@/types/api'
-import type { KnowledgeCategory, KnowledgeCategoryCreateRequest, KnowledgeArticle, KnowledgeArticleCreateRequest, ArticleSearchResult } from '@/types/knowledge'
-
-// ==================== 分类管理 ====================
-
-export function createCategory(projectId: number, data: KnowledgeCategoryCreateRequest) {
-  return service.post<any, KnowledgeCategory>(`/projects/${projectId}/knowledge-categories`, data)
-}
-
-export function getCategoryTree(projectId: number) {
-  return service.get<any, KnowledgeCategory[]>(`/projects/${projectId}/knowledge-categories`)
-}
-
-export function updateCategory(id: number, data: Partial<KnowledgeCategory>) {
-  return service.put<any, KnowledgeCategory>(`/knowledge-categories/${id}`, data)
-}
-
-export function deleteCategory(id: number) {
-  return service.delete<any, void>(`/knowledge-categories/${id}`)
-}
+import type { KnowledgeArticle, KnowledgeArticleCreateRequest, KnowledgeTemplate, KnowledgeTemplateCreateRequest } from '@/types/knowledge'
 
 // ==================== 文章管理 ====================
 
@@ -26,7 +8,7 @@ export function createArticle(projectId: number, data: KnowledgeArticleCreateReq
   return service.post<any, KnowledgeArticle>(`/projects/${projectId}/articles`, data)
 }
 
-export function getArticleList(projectId: number, params?: PageParams & { categoryId?: number; status?: string; keyword?: string; tags?: string }) {
+export function getArticleList(projectId: number, params?: PageParams & { category?: string; status?: string; keyword?: string }) {
   return service.get<any, PageResult<KnowledgeArticle>>(`/projects/${projectId}/articles`, { params })
 }
 
@@ -34,7 +16,7 @@ export function getArticleDetail(id: number) {
   return service.get<any, KnowledgeArticle>(`/articles/${id}`)
 }
 
-export function updateArticle(id: number, data: Partial<KnowledgeArticle>) {
+export function updateArticle(id: number, data: KnowledgeArticleCreateRequest) {
   return service.put<any, KnowledgeArticle>(`/articles/${id}`, data)
 }
 
@@ -43,15 +25,35 @@ export function deleteArticle(id: number) {
 }
 
 export function publishArticle(id: number) {
-  return service.put<any, KnowledgeArticle>(`/articles/${id}/publish`)
+  return service.post<any, void>(`/articles/${id}/publish`)
 }
 
 export function archiveArticle(id: number) {
-  return service.put<any, KnowledgeArticle>(`/articles/${id}/archive`)
+  return service.post<any, void>(`/articles/${id}/archive`)
 }
 
-// ==================== 搜索 ====================
-
 export function searchArticles(projectId: number, keyword: string) {
-  return service.get<any, ArticleSearchResult[]>(`/projects/${projectId}/articles/search`, { params: { keyword } })
+  return service.get<any, KnowledgeArticle[]>(`/projects/${projectId}/articles/search`, { params: { keyword } })
+}
+
+// ==================== 模板管理 ====================
+
+export function createTemplate(data: KnowledgeTemplateCreateRequest) {
+  return service.post<any, KnowledgeTemplate>(`/templates`, data)
+}
+
+export function getTemplateList(params?: PageParams & { type?: string }) {
+  return service.get<any, PageResult<KnowledgeTemplate>>(`/templates`, { params })
+}
+
+export function getTemplateDetail(id: number) {
+  return service.get<any, KnowledgeTemplate>(`/templates/${id}`)
+}
+
+export function updateTemplate(id: number, data: KnowledgeTemplateCreateRequest) {
+  return service.put<any, KnowledgeTemplate>(`/templates/${id}`, data)
+}
+
+export function deleteTemplate(id: number) {
+  return service.delete<any, void>(`/templates/${id}`)
 }

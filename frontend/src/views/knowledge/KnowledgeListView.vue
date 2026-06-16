@@ -1,32 +1,32 @@
 <template>
   <div class="knowledge-list">
     <el-row :gutter="16">
-      <!-- 左侧分类树 -->
+      <!-- 左侧类别筛选 -->
       <el-col :span="5">
         <el-card shadow="never" class="category-card">
           <template #header>
             <div class="category-header">
-              <span>知识分类</span>
-              <el-button link type="primary" size="small" @click="handleCreateCategory">
-                <el-icon><Plus /></el-icon>
-              </el-button>
+              <span>知识类别</span>
             </div>
           </template>
-          <el-tree
-            :data="categoryTree"
-            node-key="id"
-            default-expand-all
-            highlight-current
-            :props="{ children: 'children', label: 'name' }"
-            @node-click="handleCategoryClick"
-          >
-            <template #default="{ data }">
-              <div class="category-node">
-                <span>{{ data.name }}</span>
-                <span class="count">({{ data.articleCount ?? 0 }})</span>
-              </div>
-            </template>
-          </el-tree>
+          <div class="category-list">
+            <div
+              class="category-item"
+              :class="{ active: !selectedCategory }"
+              @click="handleCategorySelect(null)"
+            >
+              <span>全部</span>
+            </div>
+            <div
+              v-for="cat in categoryOptions"
+              :key="cat.value"
+              class="category-item"
+              :class="{ active: selectedCategory === cat.value }"
+              @click="handleCategorySelect(cat.value)"
+            >
+              <span>{{ cat.label }}</span>
+            </div>
+          </div>
         </el-card>
       </el-col>
 
@@ -55,22 +55,18 @@
                 <h3 class="article-title">{{ article.title }}</h3>
                 <el-tag :type="articleStatusType(article.status)" size="small">{{ articleStatusLabel(article.status) }}</el-tag>
               </div>
-              <p v-if="article.summary" class="article-summary">{{ article.summary }}</p>
               <div class="article-meta">
-                <span v-if="article.categoryName" class="meta-item">
-                  <el-icon><Folder /></el-icon> {{ article.categoryName }}
+                <span v-if="article.category" class="meta-item">
+                  <el-icon><Folder /></el-icon> {{ categoryLabel(article.category) }}
                 </span>
                 <span class="meta-item">
-                  <el-icon><User /></el-icon> {{ article.authorName }}
+                  <el-icon><View /></el-icon> {{ article.viewCount ?? 0 }}
                 </span>
                 <span class="meta-item">
-                  <el-icon><View /></el-icon> {{ article.viewCount }}
+                  <el-icon><Clock /></el-icon> {{ article.createdAt }}
                 </span>
-                <span class="meta-item">
-                  <el-icon><Clock /></el-icon> {{ article.updatedAt }}
-                </span>
-                <span v-if="article.tags?.length" class="meta-item">
-                  <el-tag v-for="tag in article.tags" :key="tag" size="small" type="info" style="margin-right: 4px">{{ tag }}</el-tag>
+                <span v-if="article.tags" class="meta-item">
+                  <el-tag v-for="tag in parseTags(article.tags)" :key="tag" size="small" type="info" style="margin-right: 4px">{{ tag }}</el-tag>
                 </span>
               </div>
             </div>
@@ -90,17 +86,13 @@
         <el-form-item label="标题" prop="title">
           <el-input v-model="articleFormData.title" placeholder="文章标题" />
         </el-form-item>
-        <el-form-item label="分类">
-          <el-select v-model="articleFormData.categoryId" placeholder="选择分类" clearable>
-            <el-option v-for="cat in flatCategories" :key="cat.id" :label="cat.name" :value="cat.id" />
+        <el-form-item label="类别">
+          <el-select v-model="articleFormData.category" placeholder="选择类别" clearable>
+            <el-option v-for="cat in categoryOptions" :key="cat.value" :label="cat.label" :value="cat.value" />
           </el-select>
-        </el-form-item>
-        <el-form-item label="摘要">
-          <el-input v-model="articleFormData.summary" type="textarea" :rows="2" placeholder="文章摘要" />
         </el-form-item>
         <el-form-item label="标签">
-          <el-select v-model="articleFormData.tags" multiple filterable allow-create placeholder="输入标签后回车" style="width: 100%">
-          </el-select>
+          <el-input v-model="articleFormData.tags" placeholder="多个标签用逗号分隔" />
         </el-form-item>
         <el-form-item label="内容" prop="content">
           <el-input v-model="articleFormData.content" type="textarea" :rows="12" placeholder="文章内容（支持 Markdown）" />
@@ -108,8 +100,7 @@
       </el-form>
       <template #footer>
         <el-button @click="editorVisible = false">取消</el-button>
-        <el-button @click="handleSaveDraft">保存草稿</el-button>
-        <el-button type="primary" :loading="articleSubmitLoading" @click="handlePublish">发布</el-button>
+        <el-button type="primary" :loading="articleSubmitLoading" @click="handleSave">保存</el-button>
       </template>
     </el-dialog>
 
@@ -118,12 +109,12 @@
       <div v-if="currentArticle" class="article-detail">
         <div class="detail-meta">
           <el-tag :type="articleStatusType(currentArticle.status)" size="small">{{ articleStatusLabel(currentArticle.status) }}</el-tag>
-          <span>{{ currentArticle.authorName }}</span>
-          <span>{{ currentArticle.updatedAt }}</span>
-          <span>浏览 {{ currentArticle.viewCount }}</span>
+          <span v-if="currentArticle.category">{{ categoryLabel(currentArticle.category) }}</span>
+          <span>{{ currentArticle.createdAt }}</span>
+          <span>浏览 {{ currentArticle.viewCount ?? 0 }}</span>
         </div>
-        <div v-if="currentArticle.tags?.length" class="detail-tags">
-          <el-tag v-for="tag in currentArticle.tags" :key="tag" size="small" type="info">{{ tag }}</el-tag>
+        <div v-if="currentArticle.tags" class="detail-tags">
+          <el-tag v-for="tag in parseTags(currentArticle.tags)" :key="tag" size="small" type="info">{{ tag }}</el-tag>
         </div>
         <el-divider />
         <div class="detail-content">{{ currentArticle.content }}</div>
@@ -137,35 +128,39 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
-import { getCategoryTree, createCategory, getArticleList, createArticle, updateArticle, archiveArticle } from '@/api/knowledge'
-import type { KnowledgeCategory, KnowledgeArticle, KnowledgeArticleCreateRequest } from '@/types/knowledge'
+import { getArticleList, createArticle, updateArticle, archiveArticle } from '@/api/knowledge'
+import type { KnowledgeArticle, KnowledgeArticleCreateRequest, ArticleCategory } from '@/types/knowledge'
 
 const props = defineProps<{ projectId: number }>()
 
-// 分类
-const categoryTree = ref<KnowledgeCategory[]>([])
-const selectedCategoryId = ref<number | null>(null)
+const categoryOptions = [
+  { value: 'experience', label: '经验分享' },
+  { value: 'best_practice', label: '最佳实践' },
+  { value: 'lesson_learned', label: '经验教训' },
+  { value: 'template', label: '模板' },
+  { value: 'guide', label: '指南' },
+]
 
-const flatCategories = computed(() => {
-  const result: KnowledgeCategory[] = []
-  const flatten = (items: KnowledgeCategory[]) => {
-    items.forEach((item) => {
-      result.push(item)
-      if ((item as any).children) flatten((item as any).children)
-    })
-  }
-  flatten(categoryTree.value)
-  return result
-})
+const categoryMap: Record<string, string> = {
+  experience: '经验分享', best_practice: '最佳实践', lesson_learned: '经验教训', template: '模板', guide: '指南',
+}
+
+function categoryLabel(c: string) { return categoryMap[c] ?? c }
+
+function parseTags(tags: string): string[] {
+  return tags.split(',').map(t => t.trim()).filter(Boolean)
+}
+
+const selectedCategory = ref<string | null>(null)
 
 // 文章列表
 const loading = ref(false)
 const articleList = ref<KnowledgeArticle[]>([])
 const total = ref(0)
 const searchKeyword = ref('')
-const queryParams = reactive({ page: 1, size: 10, status: '', categoryId: undefined as number | undefined })
+const queryParams = reactive({ page: 1, size: 10, status: '', category: '' as string })
 
 // 编辑器
 const editorVisible = ref(false)
@@ -174,7 +169,7 @@ const articleSubmitLoading = ref(false)
 const articleFormRef = ref<FormInstance>()
 const editingArticleId = ref<number | null>(null)
 const articleFormData = reactive<KnowledgeArticleCreateRequest>({
-  title: '', content: '', summary: '', categoryId: undefined, tags: [], status: 'draft',
+  title: '', content: '', category: undefined, tags: '',
 })
 const articleFormRules: FormRules = {
   title: [{ required: true, message: '请输入标题', trigger: 'blur' }],
@@ -191,18 +186,11 @@ const articleStatusTypeMap: Record<string, 'info' | 'warning' | 'success' | 'dan
 function articleStatusLabel(s: string) { return articleStatusMap[s] ?? s }
 function articleStatusType(s: string): 'info' | 'warning' | 'success' | 'danger' { return articleStatusTypeMap[s] ?? 'info' }
 
-async function loadCategories() {
-  try {
-    const data = await getCategoryTree(props.projectId)
-    categoryTree.value = Array.isArray(data) ? data : []
-  } catch { /* handled */ }
-}
-
 async function loadArticles() {
   loading.value = true
   try {
-    if (selectedCategoryId.value) queryParams.categoryId = selectedCategoryId.value
-    else delete (queryParams as any).categoryId
+    if (selectedCategory.value) queryParams.category = selectedCategory.value
+    else queryParams.category = ''
     if (searchKeyword.value) (queryParams as any).keyword = searchKeyword.value
     else delete (queryParams as any).keyword
     const data = await getArticleList(props.projectId, queryParams)
@@ -213,26 +201,15 @@ async function loadArticles() {
 
 function handleSearch() { queryParams.page = 1; loadArticles() }
 
-function handleCategoryClick(data: KnowledgeCategory) {
-  selectedCategoryId.value = data.id
+function handleCategorySelect(cat: string | null) {
+  selectedCategory.value = cat
   handleSearch()
-}
-
-function handleCreateCategory() {
-  ElMessageBox.prompt('请输入分类名称', '新建分类', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-  }).then(async ({ value }) => {
-    await createCategory(props.projectId, { name: value })
-    ElMessage.success('分类创建成功')
-    loadCategories()
-  }).catch(() => {})
 }
 
 function handleCreateArticle() {
   isEditArticle.value = false
   editingArticleId.value = null
-  Object.assign(articleFormData, { title: '', content: '', summary: '', categoryId: selectedCategoryId.value, tags: [], status: 'draft' })
+  Object.assign(articleFormData, { title: '', content: '', category: selectedCategory.value ?? undefined, tags: '' })
   editorVisible.value = true
 }
 
@@ -240,24 +217,14 @@ function handleEditArticle(article: KnowledgeArticle) {
   isEditArticle.value = true
   editingArticleId.value = article.id
   Object.assign(articleFormData, {
-    title: article.title, content: article.content, summary: article.summary,
-    categoryId: article.categoryId, tags: article.tags ?? [], status: article.status,
+    title: article.title, content: article.content,
+    category: article.category, tags: article.tags ?? '',
   })
   detailDrawerVisible.value = false
   editorVisible.value = true
 }
 
-async function handleSaveDraft() {
-  articleFormData.status = 'draft'
-  await doSave()
-}
-
-async function handlePublish() {
-  articleFormData.status = 'published'
-  await doSave()
-}
-
-async function doSave() {
+async function handleSave() {
   const valid = await articleFormRef.value?.validate().catch(() => false)
   if (!valid) return
   articleSubmitLoading.value = true
@@ -289,16 +256,22 @@ async function handleArchiveArticle(article: KnowledgeArticle) {
   } catch { /* cancelled */ }
 }
 
-onMounted(() => {
-  loadCategories()
-  loadArticles()
-})
+onMounted(() => { loadArticles() })
 </script>
 
 <style scoped lang="scss">
 .category-card { height: calc(100vh - 200px); overflow-y: auto; }
 .category-header { display: flex; justify-content: space-between; align-items: center; }
-.category-node { display: flex; align-items: center; gap: 4px; .count { color: #909399; font-size: 12px; } }
+.category-list { display: flex; flex-direction: column; gap: 4px; }
+.category-item {
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #606266;
+  &:hover { background: #f5f7fa; }
+  &.active { background: #ecf5ff; color: #409eff; font-weight: 500; }
+}
 
 .toolbar { display: flex; justify-content: space-between; align-items: center; .toolbar-left { display: flex; gap: 8px; } }
 
@@ -311,7 +284,6 @@ onMounted(() => {
 
   .article-header { display: flex; align-items: center; gap: 8px; }
   .article-title { margin: 0; font-size: 16px; color: #303133; flex: 1; }
-  .article-summary { margin: 8px 0 0; color: #606266; font-size: 14px; line-height: 1.5; }
   .article-meta {
     margin-top: 8px;
     display: flex;

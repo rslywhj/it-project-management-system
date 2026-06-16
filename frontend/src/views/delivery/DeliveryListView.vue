@@ -9,12 +9,6 @@
           <el-option label="已通过" value="approved" />
           <el-option label="已驳回" value="rejected" />
         </el-select>
-        <el-select v-model="queryParams.type" placeholder="类型" clearable style="width: 120px" @change="handleSearch">
-          <el-option label="文档" value="document" />
-          <el-option label="代码" value="code" />
-          <el-option label="测试报告" value="test_report" />
-          <el-option label="其他" value="other" />
-        </el-select>
       </div>
       <el-button v-permission="'delivery:create'" type="primary" size="small" @click="handleCreate">
         <el-icon><Plus /></el-icon>新建交付物
@@ -34,12 +28,9 @@
           <el-tag :type="statusType(row.status)" size="small">{{ statusLabel(row.status) }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="milestoneName" label="里程碑" width="140" />
-      <el-table-column prop="submittedByName" label="提交人" width="100" />
       <el-table-column prop="createdAt" label="创建时间" width="170" />
       <el-table-column label="操作" width="280" fixed="right">
         <template #default="{ row }">
-          <el-button v-permission="'delivery:view'" link type="primary" @click="handleViewDetail(row as Delivery)">详情</el-button>
           <el-button v-if="row.status === 'draft'" v-permission="'delivery:edit'" link type="success" @click="handleSubmitForReview(row as Delivery)">提交审核</el-button>
           <el-button v-if="row.status === 'submitted'" v-permission="'delivery:manage'" link type="warning" @click="handleReview(row as Delivery)">审核</el-button>
           <el-button v-permission="'delivery:edit'" link type="info" @click="handleNewVersion(row as Delivery)">新版本</el-button>
@@ -80,9 +71,9 @@
     <el-dialog v-model="reviewDialogVisible" title="审核交付物" width="420px">
       <el-form label-width="80px">
         <el-form-item label="审核结果">
-          <el-radio-group v-model="reviewData.status">
-            <el-radio value="approved">通过</el-radio>
-            <el-radio value="rejected">驳回</el-radio>
+          <el-radio-group v-model="reviewData.action">
+            <el-radio value="approve">通过</el-radio>
+            <el-radio value="reject">驳回</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="审核意见">
@@ -108,9 +99,8 @@ const props = defineProps<{ projectId: number }>()
 const loading = ref(false)
 const deliveryList = ref<Delivery[]>([])
 const total = ref(0)
-const queryParams = reactive({ page: 1, size: 10, keyword: '', status: '', type: '' })
+const queryParams = reactive({ page: 1, size: 10, keyword: '', status: '' })
 
-// 对话框
 const dialogVisible = ref(false)
 const dialogTitle = ref('新建交付物')
 const submitLoading = ref(false)
@@ -118,10 +108,9 @@ const formRef = ref<FormInstance>()
 const formData = reactive<DeliveryCreateRequest>({ name: '', type: 'document', description: '' })
 const formRules: FormRules = { name: [{ required: true, message: '请输入交付物名称', trigger: 'blur' }] }
 
-// 审核
 const reviewDialogVisible = ref(false)
 const reviewingId = ref<number | null>(null)
-const reviewData = reactive<DeliveryReviewRequest>({ status: 'approved', reviewComment: '' })
+const reviewData = reactive<DeliveryReviewRequest>({ action: 'approve', reviewComment: '' })
 
 const typeMap: Record<string, string> = { document: '文档', code: '代码', test_report: '测试报告', other: '其他' }
 const statusLabelMap: Record<string, string> = { draft: '草稿', submitted: '已提交', approved: '已通过', rejected: '已驳回' }
@@ -173,7 +162,7 @@ async function handleSubmitForReview(row: Delivery) {
 
 function handleReview(row: Delivery) {
   reviewingId.value = row.id
-  reviewData.status = 'approved'
+  reviewData.action = 'approve'
   reviewData.reviewComment = ''
   reviewDialogVisible.value = true
 }
@@ -186,11 +175,6 @@ async function handleReviewSubmit() {
     reviewDialogVisible.value = false
     loadData()
   } catch { /* handled */ }
-}
-
-function handleViewDetail(row: Delivery) {
-  // TODO: 打开详情抽屉
-  console.log('view delivery', row.id)
 }
 
 function handleNewVersion(row: Delivery) {

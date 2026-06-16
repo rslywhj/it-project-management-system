@@ -1,7 +1,7 @@
 /** 项目状态 */
-export type ProjectStatus = 'planning' | 'active' | 'suspended' | 'completed' | 'cancelled'
+export type ProjectStatus = 'planning' | 'in_progress' | 'closed'
 
-/** 项目信息（对齐后端 ProjectVO） */
+/** 项目信息 */
 export interface Project {
   id: number
   projectCode: string
@@ -9,18 +9,17 @@ export interface Project {
   description?: string
   type: string
   status: ProjectStatus
-  promotionEnabled: boolean
+  promotionEnabled?: boolean
   startDate?: string
   endDate?: string
   orgId?: number
-  projectManagerId: number
+  projectManagerId?: number
   createdAt: string
-  memberCount?: number
 }
 
 /** 项目创建请求 */
 export interface ProjectCreateRequest {
-  projectCode: string
+  projectCode?: string
   name: string
   description?: string
   type: string
@@ -34,6 +33,7 @@ export interface ProjectCreateRequest {
 export interface ProjectUpdateRequest {
   name?: string
   description?: string
+  type?: string
   status?: ProjectStatus
   startDate?: string
   endDate?: string
@@ -44,8 +44,7 @@ export interface ProjectMember {
   id: number
   projectId: number
   userId: number
-  username: string
-  realName: string
   role: string
+  promotionUnitId?: number
   joinedAt: string
 }

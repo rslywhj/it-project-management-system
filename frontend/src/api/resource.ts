@@ -1,57 +1,49 @@
 import service from './index'
 import type { PageParams, PageResult } from '@/types/api'
-import type { ResourceAllocation, ResourceAllocationCreateRequest, Timesheet, TimesheetCreateRequest, ResourceUtilization } from '@/types/resource'
+import type { Resource, ResourceRequest, WorkLog, WorkLogRequest, WorkloadReport } from '@/types/resource'
 
-// ==================== 资源分配 ====================
+// ==================== 资源池管理 ====================
 
-export function createAllocation(projectId: number, data: ResourceAllocationCreateRequest) {
-  return service.post<any, ResourceAllocation>(`/projects/${projectId}/allocations`, data)
+export function createResource(projectId: number, data: ResourceRequest) {
+  return service.post<any, Resource>(`/projects/${projectId}/resources`, data)
 }
 
-export function getAllocationList(projectId: number, params?: PageParams & { status?: string; userId?: number }) {
-  return service.get<any, PageResult<ResourceAllocation>>(`/projects/${projectId}/allocations`, { params })
+export function getResourceList(projectId: number, params?: PageParams & { availability?: string }) {
+  return service.get<any, PageResult<Resource>>(`/projects/${projectId}/resources`, { params })
 }
 
-export function updateAllocation(id: number, data: Partial<ResourceAllocation>) {
-  return service.put<any, ResourceAllocation>(`/allocations/${id}`, data)
+export function getResource(id: number) {
+  return service.get<any, Resource>(`/resources/${id}`)
 }
 
-export function deleteAllocation(id: number) {
-  return service.delete<any, void>(`/allocations/${id}`)
+export function updateResource(id: number, data: ResourceRequest) {
+  return service.put<any, Resource>(`/resources/${id}`, data)
 }
 
-// ==================== 工时记录 ====================
-
-export function createTimesheet(projectId: number, data: TimesheetCreateRequest) {
-  return service.post<any, Timesheet>(`/projects/${projectId}/timesheets`, data)
+export function deleteResource(id: number) {
+  return service.delete<any, void>(`/resources/${id}`)
 }
 
-export function getTimesheetList(projectId: number, params?: PageParams & { userId?: number; startDate?: string; endDate?: string; status?: string }) {
-  return service.get<any, PageResult<Timesheet>>(`/projects/${projectId}/timesheets`, { params })
+// ==================== 工时填报 ====================
+
+export function createWorkLog(projectId: number, data: WorkLogRequest) {
+  return service.post<any, WorkLog>(`/projects/${projectId}/work-logs`, data)
 }
 
-export function updateTimesheet(id: number, data: Partial<Timesheet>) {
-  return service.put<any, Timesheet>(`/timesheets/${id}`, data)
+export function getWorkLogList(projectId: number, params?: PageParams & { userId?: number; taskId?: number; startDate?: string; endDate?: string }) {
+  return service.get<any, PageResult<WorkLog>>(`/projects/${projectId}/work-logs`, { params })
 }
 
-export function deleteTimesheet(id: number) {
-  return service.delete<any, void>(`/timesheets/${id}`)
+export function updateWorkLog(id: number, data: WorkLogRequest) {
+  return service.put<any, WorkLog>(`/work-logs/${id}`, data)
 }
 
-export function submitTimesheet(id: number) {
-  return service.put<any, Timesheet>(`/timesheets/${id}/submit`)
+export function deleteWorkLog(id: number) {
+  return service.delete<any, void>(`/work-logs/${id}`)
 }
 
-export function approveTimesheet(id: number) {
-  return service.put<any, Timesheet>(`/timesheets/${id}/approve`)
-}
+// ==================== 资源负载 ====================
 
-export function rejectTimesheet(id: number, reason?: string) {
-  return service.put<any, Timesheet>(`/timesheets/${id}/reject`, { reason })
-}
-
-// ==================== 资源利用率 ====================
-
-export function getResourceUtilization(projectId: number) {
-  return service.get<any, ResourceUtilization[]>(`/projects/${projectId}/resource-utilization`)
+export function getWorkloadReport(projectId: number) {
+  return service.get<any, WorkloadReport>(`/projects/${projectId}/resources/workload`)
 }

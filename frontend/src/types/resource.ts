@@ -1,64 +1,80 @@
-/** 资源分配状态 */
-export type AllocationStatus = 'planned' | 'active' | 'completed' | 'released'
+/** 资源可用状态 */
+export type Availability = 'available' | 'busy' | 'unavailable' | 'on_leave'
 
-/** 工时记录状态 */
-export type TimesheetStatus = 'draft' | 'submitted' | 'approved' | 'rejected'
+/** 工作类型 */
+export type WorkType = 'development' | 'testing' | 'meeting' | 'design' | 'review' | 'other'
 
-/** 资源分配 */
-export interface ResourceAllocation {
+/** 资源 */
+export interface Resource {
   id: number
-  projectId: number
-  projectName?: string
   userId: number
-  userName?: string
-  role: string
-  allocationPercent: number
-  startDate: string
-  endDate: string
-  status: AllocationStatus
+  username?: string
+  realName?: string
+  projectId: number
+  skillTags?: string
+  availability: Availability
+  workloadPercent?: number
+  capacityHoursPerWeek?: number
+  remark?: string
   createdAt: string
 }
 
-/** 资源分配创建请求 */
-export interface ResourceAllocationCreateRequest {
+/** 资源创建/更新请求 */
+export interface ResourceRequest {
   userId: number
-  role: string
-  allocationPercent?: number
-  startDate: string
-  endDate: string
+  skillTags?: string
+  availability?: Availability
+  capacityHoursPerWeek?: number
+  remark?: string
 }
 
 /** 工时记录 */
-export interface Timesheet {
+export interface WorkLog {
   id: number
   projectId: number
   userId: number
-  userName?: string
   taskId?: number
   taskTitle?: string
   workDate: string
   hours: number
+  workType?: WorkType
   description?: string
-  status: TimesheetStatus
-  approvedBy?: number
-  approvedAt?: string
   createdAt: string
 }
 
-/** 工时记录创建请求 */
-export interface TimesheetCreateRequest {
-  taskId?: number
+/** 工时记录创建/更新请求 */
+export interface WorkLogRequest {
   workDate: string
   hours: number
+  taskId?: number
+  workType?: WorkType
   description?: string
 }
 
-/** 资源利用率 */
-export interface ResourceUtilization {
+/** 资源负载详情 */
+export interface ResourceWorkload {
   userId: number
-  userName: string
-  totalAllocation: number
-  activeProjects: number
+  username: string
+  realName: string
+  workloadPercent: number
+  availability: string
+  totalHoursThisWeek: number
   totalHoursThisMonth: number
-  utilizationRate: number
+}
+
+/** 工时统计 */
+export interface WorkHoursSummary {
+  totalHoursThisWeek: number
+  totalHoursThisMonth: number
+  averageHoursPerPerson: number
+}
+
+/** 资源负载报告 */
+export interface WorkloadReport {
+  projectId: number
+  totalResources: number
+  availableResources: number
+  overloadedResources: number
+  resourceWorkloads: ResourceWorkload[]
+  workHoursSummary: WorkHoursSummary
 }

@@ -1,20 +1,29 @@
 /** 测试计划状态 */
-export type TestPlanStatus = 'draft' | 'active' | 'completed' | 'archived'
+export type TestPlanStatus = 'draft' | 'in_progress' | 'completed' | 'cancelled'
 
 /** 测试用例状态 */
-export type TestCaseStatus = 'draft' | 'ready' | 'blocked'
+export type TestCaseStatus = 'active' | 'deprecated' | 'draft'
 
 /** 测试执行结果 */
-export type ExecutionResult = 'pass' | 'fail' | 'blocked' | 'skip'
+export type ExecutionStatus = 'pending' | 'passed' | 'failed' | 'blocked' | 'skipped'
 
 /** 缺陷状态 */
-export type DefectStatus = 'open' | 'in_progress' | 'resolved' | 'closed' | 'reopened'
+export type BugStatus = 'open' | 'in_progress' | 'resolved' | 'closed' | 'reopen'
 
 /** 缺陷优先级 */
-export type DefectPriority = 'critical' | 'high' | 'medium' | 'low'
+export type BugPriority = 'critical' | 'high' | 'medium' | 'low'
 
 /** 缺陷严重程度 */
-export type DefectSeverity = 'blocker' | 'critical' | 'major' | 'minor' | 'trivial'
+export type BugSeverity = 'critical' | 'major' | 'minor' | 'trivial'
+
+/** 缺陷类型 */
+export type BugType = 'functional' | 'ui' | 'performance' | 'security' | 'other'
+
+/** 测试计划类型 */
+export type TestPlanType = 'functional' | 'performance' | 'security' | 'regression'
+
+/** 测试用例类型 */
+export type TestCaseType = 'functional' | 'api' | 'ui' | 'performance'
 
 /** 测试计划 */
 export interface TestPlan {
@@ -22,21 +31,26 @@ export interface TestPlan {
   projectId: number
   name: string
   description?: string
+  type?: TestPlanType
   status: TestPlanStatus
+  iteration?: string
   startDate?: string
   endDate?: string
-  createdBy: number
-  createdByName?: string
-  createdAt: string
-  updatedAt: string
-  caseCount?: number
+  totalCases?: number
+  executedCases?: number
+  passedCases?: number
+  failedCases?: number
+  blockedCases?: number
   passRate?: number
+  createdAt: string
 }
 
 /** 测试计划创建请求 */
 export interface TestPlanCreateRequest {
   name: string
   description?: string
+  type?: TestPlanType
+  iteration?: string
   startDate?: string
   endDate?: string
 }
@@ -45,31 +59,29 @@ export interface TestPlanCreateRequest {
 export interface TestCase {
   id: number
   projectId: number
-  moduleId?: string
+  module?: string
   title: string
+  description?: string
   precondition?: string
   steps?: string
   expectedResult?: string
-  priority: DefectPriority
+  priority: BugPriority
+  type?: TestCaseType
   status: TestCaseStatus
-  assignedTo?: number
-  assignedToName?: string
   requirementId?: number
-  createdBy: number
-  createdByName?: string
   createdAt: string
-  updatedAt: string
 }
 
 /** 测试用例创建请求 */
 export interface TestCaseCreateRequest {
   title: string
-  moduleId?: string
+  module?: string
+  description?: string
   precondition?: string
   steps?: string
   expectedResult?: string
-  priority?: DefectPriority
-  assignedTo?: number
+  priority?: BugPriority
+  type?: TestCaseType
   requirementId?: number
 }
 
@@ -78,72 +90,102 @@ export interface TestExecution {
   id: number
   testPlanId: number
   testCaseId: number
-  testCaseTitle?: string
-  result: ExecutionResult
-  executedBy: number
-  executedByName?: string
-  executedAt: string
+  caseTitle?: string
+  status: ExecutionStatus
+  executedBy?: number
+  executedAt?: string
+  actualResult?: string
   remark?: string
-  defectId?: number
+  bugId?: number
+  createdAt?: string
 }
 
 /** 测试执行请求 */
 export interface TestExecutionRequest {
-  result: ExecutionResult
+  testCaseId: number
+  status: ExecutionStatus
+  actualResult?: string
   remark?: string
-  createDefect?: boolean
-  defectSummary?: string
+  bugId?: number
 }
 
 /** 缺陷 */
-export interface Defect {
+export interface Bug {
   id: number
   projectId: number
   testPlanId?: number
   testCaseId?: number
   title: string
   description?: string
-  steps?: string
-  priority: DefectPriority
-  severity: DefectSeverity
-  status: DefectStatus
+  stepsToReproduce?: string
+  expectedResult?: string
+  actualResult?: string
+  severity: BugSeverity
+  priority?: BugPriority
+  status: BugStatus
+  type?: BugType
   assignedTo?: number
-  assignedToName?: string
-  reportedBy: number
-  reportedByName?: string
+  reportedBy?: number
+  requirementId?: number
   resolvedAt?: string
   resolvedBy?: number
   resolution?: string
+  closedAt?: string
+  environment?: string
+  attachmentPath?: string
   createdAt: string
-  updatedAt: string
 }
 
 /** 缺陷创建请求 */
-export interface DefectCreateRequest {
+export interface BugCreateRequest {
   title: string
   description?: string
-  steps?: string
-  priority?: DefectPriority
-  severity?: DefectSeverity
+  stepsToReproduce?: string
+  expectedResult?: string
+  actualResult?: string
+  severity?: BugSeverity
+  priority?: BugPriority
+  type?: BugType
   assignedTo?: number
   testPlanId?: number
   testCaseId?: number
+  requirementId?: number
+  environment?: string
 }
 
-/** 测试报告摘要 */
+/** 缺陷状态更新请求 */
+export interface BugStatusUpdateRequest {
+  status: BugStatus
+  resolution?: string
+}
+
+/** 缺陷严重程度统计 */
+export interface BugSeverityStat {
+  severity: string
+  count: number
+}
+
+/** 缺陷模块统计 */
+export interface BugModuleStat {
+  module: string
+  count: number
+}
+
+/** 测试报告 */
 export interface TestReport {
+  projectId: number
   testPlanId: number
-  testPlanName: string
+  planName: string
   totalCases: number
   executedCases: number
-  passCases: number
-  failCases: number
+  passedCases: number
+  failedCases: number
   blockedCases: number
+  skippedCases?: number
   passRate: number
-  defectStats: {
-    total: number
-    open: number
-    resolved: number
-    closed: number
-  }
+  totalBugs: number
+  openBugs: number
+  resolvedBugs: number
+  severityDistribution?: BugSeverityStat[]
+  moduleDistribution?: BugModuleStat[]
 }

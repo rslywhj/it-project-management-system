@@ -1,11 +1,8 @@
 /** 推广单元状态 */
 export type PromotionUnitStatus = 'pending' | 'in_progress' | 'completed' | 'suspended'
 
-/** 推广阶段状态 */
-export type PromotionStageStatus = 'pending' | 'in_progress' | 'completed' | 'skipped'
-
-/** 差异化需求类型 */
-export type UnitRequirementType = 'general' | 'differential'
+/** 推广进度状态 */
+export type PromotionProgressStatus = 'pending' | 'in_progress' | 'completed' | 'skipped'
 
 /** 配置差异状态 */
 export type ConfigDiffStatus = 'pending' | 'approved' | 'rejected'
@@ -19,7 +16,7 @@ export interface PromotionUnit {
   status: PromotionUnitStatus
   currentStageId?: number
   currentStageName?: string
-  completionRate: number
+  completionRate?: number
   responsibleUserId?: number
   responsibleUserName?: string
   expectedStartDate?: string
@@ -27,8 +24,8 @@ export interface PromotionUnit {
   actualStartDate?: string
   actualEndDate?: string
   remark?: string
+  stageProgress?: PromotionProgress[]
   createdAt: string
-  updatedAt: string
 }
 
 /** 推广单元创建请求 */
@@ -41,63 +38,85 @@ export interface PromotionUnitCreateRequest {
   remark?: string
 }
 
+/** 批量创建推广单元请求 */
+export interface BatchCreateUnitsRequest {
+  units: PromotionUnitCreateRequest[]
+  initStageProgress?: boolean
+}
+
 /** 推广阶段模板 */
 export interface PromotionStageTemplate {
   id: number
-  projectId?: number
+  projectId: number
   name: string
   description?: string
-  sortOrder: number
-  isLocked: boolean
+  sortOrder?: number
+  isLocked: number
   estimatedDays?: number
   createdAt: string
 }
 
 /** 推广阶段模板创建请求 */
-export interface PromotionStageTemplateCreateRequest {
+export interface PromotionStageTemplateRequest {
   name: string
   description?: string
   sortOrder?: number
-  isLocked?: boolean
+  isLocked?: number
   estimatedDays?: number
 }
 
-/** 推广单元阶段进度 */
+/** 推广进度 */
 export interface PromotionProgress {
   id: number
   promotionUnitId: number
   stageTemplateId: number
-  stageTemplateName?: string
-  status: PromotionStageStatus
+  stageName?: string
+  status: PromotionProgressStatus
   startedAt?: string
   completedAt?: string
   expectedEndDate?: string
-  completionRate: number
+  completionRate?: number
   remark?: string
-  createdAt: string
 }
 
-/** 推广看板汇总 */
+/** 推广进度更新请求 */
+export interface PromotionProgressUpdateRequest {
+  status: PromotionProgressStatus
+  completionRate?: number
+  remark?: string
+}
+
+/** 单位进度对比 */
+export interface UnitComparison {
+  unitId: number
+  orgName: string
+  currentStage: string
+  completionRate: number
+  status: string
+  isOverdue: boolean
+}
+
+/** 延期预警 */
+export interface OverdueAlert {
+  unitId: number
+  orgName: string
+  stageName: string
+  expectedEndDate: string
+  overdueDays: number
+  alertLevel: string
+}
+
+/** 推广看板 */
 export interface PromotionDashboard {
+  projectId: number
   totalUnits: number
   completedUnits: number
   inProgressUnits: number
   pendingUnits: number
-  suspendedUnits: number
-  delayedUnits: number
-  averageCompletionRate: number
-  unitProgressList: PromotionUnitProgressSummary[]
-}
-
-/** 推广单元进度摘要 */
-export interface PromotionUnitProgressSummary {
-  unitId: number
-  orgName: string
-  status: PromotionUnitStatus
-  completionRate: number
-  currentStageName?: string
-  expectedEndDate?: string
-  isDelayed: boolean
+  overdueUnits: number
+  overallCompletionRate: number
+  unitComparisons: UnitComparison[]
+  overdueAlerts: OverdueAlert[]
 }
 
 /** 差异化需求 */
@@ -107,19 +126,19 @@ export interface UnitRequirement {
   requirementId?: number
   title: string
   description?: string
-  type: UnitRequirementType
-  priority: string
-  status: string
+  type?: string
+  priority?: string
+  status?: string
   createdAt: string
 }
 
 /** 差异化需求创建请求 */
-export interface UnitRequirementCreateRequest {
+export interface UnitRequirementRequest {
   title: string
   description?: string
-  type?: UnitRequirementType
-  priority?: string
   requirementId?: number
+  type?: string
+  priority?: string
 }
 
 /** 配置基线 */
@@ -129,16 +148,16 @@ export interface ConfigBaseline {
   configKey: string
   configValue?: string
   description?: string
-  isLocked: boolean
+  isLocked: number
   createdAt: string
 }
 
 /** 配置基线创建请求 */
-export interface ConfigBaselineCreateRequest {
+export interface ConfigBaselineRequest {
   configKey: string
   configValue?: string
   description?: string
-  isLocked?: boolean
+  isLocked?: number
 }
 
 /** 配置差异 */
@@ -147,6 +166,7 @@ export interface UnitConfigDiff {
   promotionUnitId: number
   configBaselineId: number
   configKey?: string
+  standardValue?: string
   diffValue?: string
   diffReason?: string
   status: ConfigDiffStatus
@@ -156,7 +176,7 @@ export interface UnitConfigDiff {
 }
 
 /** 配置差异创建请求 */
-export interface UnitConfigDiffCreateRequest {
+export interface UnitConfigDiffRequest {
   configBaselineId: number
   diffValue?: string
   diffReason?: string

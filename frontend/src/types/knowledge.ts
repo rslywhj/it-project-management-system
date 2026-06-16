@@ -1,61 +1,48 @@
 /** 文章状态 */
 export type ArticleStatus = 'draft' | 'published' | 'archived'
 
-/** 文章分类 */
-export interface KnowledgeCategory {
-  id: number
-  projectId?: number
-  name: string
-  parentId?: number
-  sortOrder: number
-  icon?: string
-  articleCount?: number
-  createdAt: string
-}
-
-/** 文章分类创建请求 */
-export interface KnowledgeCategoryCreateRequest {
-  name: string
-  parentId?: number
-  sortOrder?: number
-  icon?: string
-}
+/** 文章类别（后端为字符串枚举，非独立实体） */
+export type ArticleCategory = 'experience' | 'best_practice' | 'lesson_learned' | 'template' | 'guide'
 
 /** 知识库文章 */
 export interface KnowledgeArticle {
   id: number
   projectId?: number
-  categoryId?: number
-  categoryName?: string
   title: string
   content: string
-  summary?: string
-  tags?: string[]
+  category?: ArticleCategory
+  tags?: string
   status: ArticleStatus
-  viewCount: number
-  authorId: number
-  authorName?: string
+  viewCount?: number
+  authorId?: number
   createdAt: string
-  updatedAt: string
+  updatedAt?: string
 }
 
 /** 文章创建请求 */
 export interface KnowledgeArticleCreateRequest {
-  categoryId?: number
   title: string
-  content: string
-  summary?: string
-  tags?: string[]
-  status?: ArticleStatus
+  content?: string
+  category?: ArticleCategory
+  tags?: string
 }
 
-/** 文章搜索结果 */
-export interface ArticleSearchResult {
+/** 模板 */
+export interface KnowledgeTemplate {
   id: number
-  title: string
-  summary?: string
-  categoryName?: string
-  tags?: string[]
-  highlight?: string
-  score: number
+  name: string
+  description?: string
+  type: string
+  content?: string
+  status?: string
+  isSystem?: boolean
+  createdAt: string
+}
+
+/** 模板创建请求 */
+export interface KnowledgeTemplateCreateRequest {
+  name: string
+  description?: string
+  type: string
+  content?: string
 }

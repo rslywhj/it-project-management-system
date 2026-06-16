@@ -4,7 +4,7 @@ import type {
   TestPlan, TestPlanCreateRequest,
   TestCase, TestCaseCreateRequest,
   TestExecution, TestExecutionRequest,
-  Defect, DefectCreateRequest,
+  Bug, BugCreateRequest, BugStatusUpdateRequest,
   TestReport,
 } from '@/types/test'
 
@@ -26,8 +26,13 @@ export function getTestPlanDetail(id: number) {
 }
 
 /** 更新测试计划 */
-export function updateTestPlan(id: number, data: Partial<TestPlan>) {
+export function updateTestPlan(id: number, data: TestPlanCreateRequest) {
   return service.put<any, TestPlan>(`/test-plans/${id}`, data)
+}
+
+/** 更新测试计划状态 */
+export function updateTestPlanStatus(id: number, status: string) {
+  return service.put<any, TestPlan>(`/test-plans/${id}/status`, null, { params: { status } })
 }
 
 /** 删除测试计划 */
@@ -36,8 +41,8 @@ export function deleteTestPlan(id: number) {
 }
 
 /** 获取测试报告 */
-export function getTestReport(planId: number) {
-  return service.get<any, TestReport>(`/test-plans/${planId}/report`)
+export function getTestReport(projectId: number, planId: number) {
+  return service.get<any, TestReport>(`/projects/${projectId}/test-plans/${planId}/report`)
 }
 
 // ==================== 测试用例 ====================
@@ -48,7 +53,7 @@ export function createTestCase(projectId: number, data: TestCaseCreateRequest) {
 }
 
 /** 获取测试用例列表 */
-export function getTestCaseList(projectId: number, params: PageParams & { status?: string; priority?: string; moduleId?: string }) {
+export function getTestCaseList(projectId: number, params: PageParams & { keyword?: string; module?: string; priority?: string }) {
   return service.get<any, PageResult<TestCase>>(`/projects/${projectId}/test-cases`, { params })
 }
 
@@ -58,7 +63,7 @@ export function getTestCaseDetail(id: number) {
 }
 
 /** 更新测试用例 */
-export function updateTestCase(id: number, data: Partial<TestCase>) {
+export function updateTestCase(id: number, data: TestCaseCreateRequest) {
   return service.put<any, TestCase>(`/test-cases/${id}`, data)
 }
 
@@ -70,43 +75,43 @@ export function deleteTestCase(id: number) {
 // ==================== 测试执行 ====================
 
 /** 执行测试用例 */
-export function executeTestCase(planId: number, caseId: number, data: TestExecutionRequest) {
-  return service.post<any, TestExecution>(`/test-plans/${planId}/cases/${caseId}/execute`, data)
+export function executeTest(planId: number, data: TestExecutionRequest) {
+  return service.post<any, TestExecution>(`/test-plans/${planId}/executions`, data)
 }
 
 /** 获取测试计划的执行记录 */
-export function getExecutionList(planId: number, params?: PageParams) {
-  return service.get<any, PageResult<TestExecution>>(`/test-plans/${planId}/executions`, { params })
+export function getExecutionList(planId: number) {
+  return service.get<any, TestExecution[]>(`/test-plans/${planId}/executions`)
 }
 
 // ==================== 缺陷管理 ====================
 
 /** 创建缺陷 */
-export function createDefect(projectId: number, data: DefectCreateRequest) {
-  return service.post<any, Defect>(`/projects/${projectId}/defects`, data)
+export function createBug(projectId: number, data: BugCreateRequest) {
+  return service.post<any, Bug>(`/projects/${projectId}/bugs`, data)
 }
 
 /** 获取缺陷列表 */
-export function getDefectList(projectId: number, params: PageParams & { status?: string; priority?: string; severity?: string }) {
-  return service.get<any, PageResult<Defect>>(`/projects/${projectId}/defects`, { params })
+export function getBugList(projectId: number, params: PageParams & { keyword?: string; status?: string; severity?: string }) {
+  return service.get<any, PageResult<Bug>>(`/projects/${projectId}/bugs`, { params })
 }
 
 /** 获取缺陷详情 */
-export function getDefectDetail(id: number) {
-  return service.get<any, Defect>(`/defects/${id}`)
+export function getBugDetail(id: number) {
+  return service.get<any, Bug>(`/bugs/${id}`)
 }
 
 /** 更新缺陷 */
-export function updateDefect(id: number, data: Partial<Defect>) {
-  return service.put<any, Defect>(`/defects/${id}`, data)
+export function updateBug(id: number, data: BugCreateRequest) {
+  return service.put<any, Bug>(`/bugs/${id}`, data)
 }
 
-/** 关闭缺陷 */
-export function closeDefect(id: number, resolution?: string) {
-  return service.put<any, Defect>(`/defects/${id}/close`, { resolution })
+/** 更新缺陷状态 */
+export function updateBugStatus(id: number, data: BugStatusUpdateRequest) {
+  return service.put<any, Bug>(`/bugs/${id}/status`, data)
 }
 
 /** 删除缺陷 */
-export function deleteDefect(id: number) {
-  return service.delete<any, void>(`/defects/${id}`)
+export function deleteBug(id: number) {
+  return service.delete<any, void>(`/bugs/${id}`)
 }

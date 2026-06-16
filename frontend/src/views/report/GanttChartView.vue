@@ -90,13 +90,13 @@ interface GanttBar {
 
 const ganttBars = computed<GanttBar[]>(() =>
   tasks.value
-    .filter((t) => t.start_date && t.end_date)
+    .filter((t) => t.start && t.end)
     .map((t) => ({
       id: t.id,
       text: t.text,
       title: t.text,
-      start: t.start_date,
-      end: t.end_date,
+      start: t.start,
+      end: t.end,
       ganttBarConfig: {
         color: '#fff',
         backgroundColor: t.progress >= 1 ? '#67c23a' : t.progress > 0 ? '#e6a23c' : '#909399',
@@ -152,8 +152,8 @@ async function initDhtmlxGantt() {
       data: tasks.value.map((t) => ({
         id: t.id,
         text: t.text,
-        start_date: t.start_date,
-        end_date: t.end_date,
+        start_date: t.start,
+        end_date: t.end,
         progress: t.progress,
         parent: t.parent || 0,
       })),

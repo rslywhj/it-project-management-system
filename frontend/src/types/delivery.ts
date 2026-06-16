@@ -9,23 +9,18 @@ export interface Delivery {
   id: number
   projectId: number
   milestoneId?: number
-  milestoneName?: string
   promotionUnitId?: number
   name: string
   type: DeliveryType
   description?: string
   status: DeliveryStatus
   filePath?: string
-  fileName?: string
-  version: number
+  version?: number
   submittedBy?: number
-  submittedByName?: string
   reviewedBy?: number
-  reviewedByName?: string
   reviewedAt?: string
   reviewComment?: string
   createdAt: string
-  updatedAt: string
 }
 
 /** 交付物创建请求 */
@@ -35,10 +30,11 @@ export interface DeliveryCreateRequest {
   description?: string
   milestoneId?: number
   promotionUnitId?: number
+  filePath?: string
 }
 
 /** 交付物审核请求 */
 export interface DeliveryReviewRequest {
-  status: 'approved' | 'rejected'
+  action: 'approve' | 'reject'
   reviewComment?: string
 }

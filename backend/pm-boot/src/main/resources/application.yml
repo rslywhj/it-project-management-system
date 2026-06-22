@@ -24,7 +24,7 @@ mybatis-plus:
       logic-not-delete-value: 0
   configuration:
     map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    # SQL日志：生产环境使用slf4j（需配合logback配置），开发环境在application-dev.yml中覆盖为StdOutImpl
 
 # SpringDoc
 springdoc:

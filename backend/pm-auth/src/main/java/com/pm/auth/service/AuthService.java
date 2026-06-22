@@ -158,4 +158,50 @@ public class AuthService {
         String key = TOKEN_BLACKLIST_PREFIX + token;
         return Boolean.TRUE.equals(stringRedisTemplate.hasKey(key));
     }
+
+    /**
+     * 修改密码
+     */
+    public void changePassword(Long userId, String oldPassword, String newPassword) {
+        SysUser user = sysUserMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(ResultCode.USER_NOT_FOUND);
+        }
+
+        // 验证原密码
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new BusinessException(ResultCode.USER_PASSWORD_ERROR);
+        }
+
+        // 更新密码
+        user.setPassword(passwordEncoder.encode(newPassword));
+        sysUserMapper.updateById(user);
+        log.info("User {} changed password", userId);
+    }
+
+    /**
+     * 更新个人信息
+     */
+    public SysUser updateProfile(Long userId, String realName, String email, String phone, String avatar) {
+        SysUser user = sysUserMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(ResultCode.USER_NOT_FOUND);
+        }
+
+        if (realName != null) {
+            user.setRealName(realName);
+        }
+        if (email != null) {
+            user.setEmail(email);
+        }
+        if (phone != null) {
+            user.setPhone(phone);
+        }
+        if (avatar != null) {
+            user.setAvatar(avatar);
+        }
+
+        sysUserMapper.updateById(user);
+        return user;
+    }
 }

@@ -66,10 +66,13 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import { updateProfile, changePassword, getProfile } from '@/api/profile'
+import { clearTokens } from '@/utils/auth'
 
+const router = useRouter()
 const userStore = useUserStore()
 
 // ─── 个人信息表单 ─────────────────────────────────────────────
@@ -148,8 +151,10 @@ async function handleChangePassword() {
       newPassword: pwdForm.newPassword,
     })
     ElMessage.success('密码修改成功，请重新登录')
-    // 清空表单
-    Object.assign(pwdForm, { oldPassword: '', newPassword: '', confirmPassword: '' })
+    // 清除凭证并跳转登录页
+    clearTokens()
+    userStore.resetState()
+    router.push('/login')
   } catch { /* handled */ } finally {
     pwdLoading.value = false
   }

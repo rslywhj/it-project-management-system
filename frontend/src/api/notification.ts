@@ -19,7 +19,7 @@ export async function getNotificationList(params: PageParams & { isRead?: number
 }
 
 /** 未读数量 */
-export async function getUnreadCount(): Promise<number> {
+export async function getUnreadCount(): Promise<{ count: number }> {
   return service.get('/notifications/unread-count')
 }
 

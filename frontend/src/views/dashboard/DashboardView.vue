@@ -89,6 +89,7 @@
 
 <script setup lang="ts">
 import { reactive, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
 import { getDashboardStats, type DashboardStats } from '@/api/system'
 
 const stats = reactive<DashboardStats>({
@@ -110,7 +111,7 @@ async function loadStats() {
     const data = await getDashboardStats()
     Object.assign(stats, data)
   } catch {
-    // 降级：保持默认0值
+    ElMessage.warning('仪表盘数据加载失败，显示默认值')
   }
 }
 

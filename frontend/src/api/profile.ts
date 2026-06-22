@@ -24,5 +24,5 @@ export async function updateProfile(data: ProfileUpdateRequest): Promise<void> {
 
 /** 修改密码 */
 export async function changePassword(data: PasswordChangeRequest): Promise<void> {
-  return service.put('/auth/password', data)
+  return service.post('/auth/change-password', data)
 }

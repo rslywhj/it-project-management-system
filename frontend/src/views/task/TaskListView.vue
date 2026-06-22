@@ -165,6 +165,9 @@
         <el-button type="primary" @click="handleProgressSubmit">确定</el-button>
       </template>
     </el-dialog>
+
+    <!-- 任务详情抽屉 -->
+    <TaskDetailDrawer v-model="detailDrawerVisible" :task-id="detailTaskId" />
   </div>
 </template>
 
@@ -181,6 +184,7 @@ import {
 } from '@/api/task'
 import type { Task, TaskCreateRequest } from '@/types/task'
 import GanttChart from './components/GanttChart.vue'
+import TaskDetailDrawer from './components/TaskDetailDrawer.vue'
 
 const props = defineProps<{ projectId: number }>()
 
@@ -203,6 +207,10 @@ const isEdit = ref(false)
 const submitLoading = ref(false)
 const formRef = ref<FormInstance>()
 const editingId = ref<number | null>(null)
+
+// 详情抽屉
+const detailDrawerVisible = ref(false)
+const detailTaskId = ref<number | null>(null)
 const dateRange = ref<[string, string] | null>(null)
 const formData = reactive<TaskCreateRequest>({
   title: '',
@@ -290,8 +298,8 @@ function handleDateChange(val: [string, string] | null) {
 }
 
 function handleViewDetail(row: Task) {
-  // TODO: 打开任务详情抽屉
-  console.log('view task', row.id)
+  detailTaskId.value = row.id
+  detailDrawerVisible.value = true
 }
 
 function handleProgressUpdate(row: Task) {

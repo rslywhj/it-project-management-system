@@ -65,7 +65,7 @@ export async function deleteUser(id: number): Promise<void> {
 
 /** 重置密码 */
 export async function resetUserPassword(id: number, newPassword: string): Promise<void> {
-  return service.put(`/system/users/${id}/password`, { newPassword })
+  return service.post(`/system/users/${id}/reset-password`, { newPassword })
 }
 
 // ─── 角色管理 ─────────────────────────────────────────────────
@@ -137,9 +137,9 @@ export interface SysPermission {
   sort: number
 }
 
-/** 权限树 */
-export async function getPermissionTree(): Promise<SysPermission[]> {
-  return service.get('/system/permissions/tree')
+/** 权限列表 */
+export async function getPermissionList(): Promise<SysPermission[]> {
+  return service.get('/system/permissions')
 }
 
 // ─── 仪表盘 ──────────────────────────────────────────────────

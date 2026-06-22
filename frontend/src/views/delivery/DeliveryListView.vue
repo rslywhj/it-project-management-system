@@ -94,6 +94,9 @@
         <el-button type="primary" @click="handleReviewSubmit">确定</el-button>
       </template>
     </el-dialog>
+
+    <!-- 交付物详情抽屉 -->
+    <DeliveryDetailDrawer v-model="detailDrawerVisible" :delivery-id="detailDeliveryId" />
   </div>
 </template>
 
@@ -102,6 +105,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { getDeliveryList, createDelivery, deleteDelivery, submitDelivery, reviewDelivery } from '@/api/delivery'
 import type { Delivery, DeliveryCreateRequest, DeliveryReviewRequest } from '@/types/delivery'
+import DeliveryDetailDrawer from './components/DeliveryDetailDrawer.vue'
 
 const props = defineProps<{ projectId: number }>()
 
@@ -112,6 +116,10 @@ const queryParams = reactive({ page: 1, size: 10, keyword: '', status: '', type:
 
 // 对话框
 const dialogVisible = ref(false)
+
+// 详情抽屉
+const detailDrawerVisible = ref(false)
+const detailDeliveryId = ref<number | null>(null)
 const dialogTitle = ref('新建交付物')
 const submitLoading = ref(false)
 const formRef = ref<FormInstance>()
@@ -189,8 +197,8 @@ async function handleReviewSubmit() {
 }
 
 function handleViewDetail(row: Delivery) {
-  // TODO: 打开详情抽屉
-  console.log('view delivery', row.id)
+  detailDeliveryId.value = row.id
+  detailDrawerVisible.value = true
 }
 
 function handleNewVersion(row: Delivery) {

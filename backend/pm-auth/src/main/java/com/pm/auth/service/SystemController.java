@@ -1,5 +1,6 @@
 package com.pm.auth.service;
 
+import com.pm.auth.dto.ResetPasswordRequest;
 import com.pm.auth.dto.RoleRequest;
 import com.pm.auth.dto.UserCreateRequest;
 import com.pm.auth.dto.UserUpdateRequest;
@@ -68,8 +69,8 @@ public class SystemController {
     @Operation(summary = "重置密码", description = "管理员重置用户密码")
     public Result<Void> resetPassword(
             @PathVariable Long userId,
-            @RequestParam String newPassword) {
-        systemService.resetPassword(userId, newPassword);
+            @Valid @RequestBody ResetPasswordRequest request) {
+        systemService.resetPassword(userId, request.getNewPassword());
         return Result.ok();
     }
 

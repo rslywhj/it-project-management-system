@@ -1,6 +1,7 @@
 package com.pm.notification.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pm.common.exception.BusinessException;
 import com.pm.common.result.PageResult;
@@ -81,7 +82,7 @@ public class NotificationService {
     }
 
     /**
-     * 标记所有通知为已读
+     * 标记所有通知为已读（批量更新）
      */
     public void markAllAsRead() {
         Long userId = UserContext.getUserId();
@@ -89,17 +90,13 @@ public class NotificationService {
             throw new BusinessException(ResultCode.UNAUTHORIZED);
         }
 
-        List<SysNotification> unreadList = notificationMapper.selectList(
-                new LambdaQueryWrapper<SysNotification>()
-                        .eq(SysNotification::getUserId, userId)
-                        .eq(SysNotification::getIsRead, 0));
-
         LocalDateTime now = LocalDateTime.now();
-        for (SysNotification notification : unreadList) {
-            notification.setIsRead(1);
-            notification.setReadAt(now);
-            notificationMapper.updateById(notification);
-        }
+        LambdaUpdateWrapper<SysNotification> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(SysNotification::getUserId, userId)
+                .eq(SysNotification::getIsRead, 0)
+                .set(SysNotification::getIsRead, 1)
+                .set(SysNotification::getReadAt, now);
+        notificationMapper.update(null, updateWrapper);
     }
 
     /**

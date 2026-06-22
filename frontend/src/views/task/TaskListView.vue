@@ -119,11 +119,11 @@
         </el-form-item>
         <el-form-item label="类型">
           <el-select v-model="formData.type" placeholder="请选择任务类型">
-            <el-option label="开发" value="development" />
-            <el-option label="测试" value="testing" />
+            <el-option label="开发" value="dev" />
+            <el-option label="测试" value="test" />
             <el-option label="设计" value="design" />
             <el-option label="调研" value="research" />
-            <el-option label="部署" value="deployment" />
+            <el-option label="部署" value="deploy" />
             <el-option label="其他" value="other" />
           </el-select>
         </el-form-item>
@@ -264,7 +264,7 @@ watch(viewMode, (mode) => {
 function handleCreate() {
   isEdit.value = false
   editingId.value = null
-  Object.assign(formData, { title: '', description: '', type: 'development', priority: 'medium', plannedStart: '', plannedEnd: '' })
+  Object.assign(formData, { title: '', description: '', type: 'dev', priority: 'medium', plannedStart: '', plannedEnd: '' })
   dateRange.value = null
   dialogVisible.value = true
 }

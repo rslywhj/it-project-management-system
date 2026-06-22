@@ -22,6 +22,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -62,7 +63,7 @@ public class PromotionService {
         // 如果有阶段模板，自动初始化进度
         initStageProgress(unit.getId(), projectId);
 
-        return toUnitVO(unit);
+        return toUnitVO(unit, Collections.emptyMap(), Collections.emptyMap());
     }
 
     @Transactional
@@ -83,8 +84,14 @@ public class PromotionService {
                 .orderByAsc(PromotionUnit::getOrgCode);
 
         Page<PromotionUnit> result = unitMapper.selectPage(new Page<>(page, size), wrapper);
-        List<PromotionUnitVO> voList = result.getRecords().stream()
-                .map(this::toUnitVO)
+        List<PromotionUnit> units = result.getRecords();
+
+        // 批量查询阶段模板和进度数据
+        Map<Long, String> stageNameMap = batchGetStageNames(units);
+        Map<Long, List<PromotionProgress>> progressMap = batchGetProgress(units);
+
+        List<PromotionUnitVO> voList = units.stream()
+                .map(u -> toUnitVO(u, stageNameMap, progressMap))
                 .collect(Collectors.toList());
         return PageResult.of(voList, result.getTotal(), page, size);
     }
@@ -94,7 +101,19 @@ public class PromotionService {
         if (unit == null) {
             throw new BusinessException(1051, "推广单元不存在");
         }
-        return toUnitVO(unit);
+        // 单个单元，直接查询
+        Map<Long, String> stageNameMap = Collections.emptyMap();
+        if (unit.getCurrentStageId() != null) {
+            PromotionStageTemplate stage = stageTemplateMapper.selectById(unit.getCurrentStageId());
+            if (stage != null) {
+                stageNameMap = Map.of(unit.getCurrentStageId(), stage.getName());
+            }
+        }
+        List<PromotionProgress> progressList = progressMapper.selectList(
+                new LambdaQueryWrapper<PromotionProgress>()
+                        .eq(PromotionProgress::getPromotionUnitId, unitId));
+        Map<Long, List<PromotionProgress>> progressMap = Map.of(unitId, progressList);
+        return toUnitVO(unit, stageNameMap, progressMap);
     }
 
     @Transactional
@@ -107,7 +126,7 @@ public class PromotionService {
         BeanUtils.copyProperties(request, unit, "id", "projectId", "status", "completionRate",
                 "currentStageId", "createdAt", "createdBy", "isDeleted");
         unitMapper.updateById(unit);
-        return toUnitVO(unit);
+        return getUnit(unitId);
     }
 
     @Transactional
@@ -222,7 +241,17 @@ public class PromotionService {
                 new LambdaQueryWrapper<PromotionProgress>()
                         .eq(PromotionProgress::getPromotionUnitId, unitId)
                         .orderByAsc(PromotionProgress::getCreatedAt));
-        return progressList.stream().map(this::toProgressVO).collect(Collectors.toList());
+
+        // 批量查询阶段名称
+        List<Long> stageIds = progressList.stream()
+                .map(PromotionProgress::getStageTemplateId)
+                .distinct()
+                .collect(Collectors.toList());
+        Map<Long, String> stageNameMap = batchGetStageNameMap(stageIds);
+
+        return progressList.stream()
+                .map(p -> toProgressVO(p, stageNameMap))
+                .collect(Collectors.toList());
     }
 
     // ==================== 差异化需求管理 ====================
@@ -369,6 +398,9 @@ public class PromotionService {
             dashboard.setOverallCompletionRate(BigDecimal.ZERO);
         }
 
+        // 批量查询阶段名称（避免N+1）
+        Map<Long, String> stageNameMap = batchGetStageNames(units);
+
         // 各单位进度对比
         List<UnitComparisonVO> comparisons = units.stream().map(unit -> {
             UnitComparisonVO comp = new UnitComparisonVO();
@@ -376,10 +408,9 @@ public class PromotionService {
             comp.setOrgName(unit.getOrgName());
             comp.setCompletionRate(unit.getCompletionRate());
             comp.setStatus(unit.getStatus());
-            // 获取当前阶段名称
+            // 使用预查询的阶段名称
             if (unit.getCurrentStageId() != null) {
-                PromotionStageTemplate stage = stageTemplateMapper.selectById(unit.getCurrentStageId());
-                comp.setCurrentStage(stage != null ? stage.getName() : null);
+                comp.setCurrentStage(stageNameMap.get(unit.getCurrentStageId()));
             }
             // 判断是否延期
             comp.setIsOverdue(unit.getExpectedEndDate() != null
@@ -436,6 +467,56 @@ public class PromotionService {
     }
 
     // ==================== 内部方法 ====================
+
+    /**
+     * 批量获取阶段名称映射（避免N+1查询）
+     * @return stageId -> stageName 的映射
+     */
+    private Map<Long, String> batchGetStageNames(List<PromotionUnit> units) {
+        List<Long> stageIds = units.stream()
+                .map(PromotionUnit::getCurrentStageId)
+                .filter(id -> id != null)
+                .distinct()
+                .collect(Collectors.toList());
+        return batchGetStageNameMap(stageIds);
+    }
+
+    /**
+     * 批量获取阶段名称映射
+     * @param stageIds 阶段模板ID列表
+     * @return stageId -> stageName 的映射
+     */
+    private Map<Long, String> batchGetStageNameMap(List<Long> stageIds) {
+        if (stageIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<PromotionStageTemplate> templates = stageTemplateMapper.selectList(
+                new LambdaQueryWrapper<PromotionStageTemplate>()
+                        .in(PromotionStageTemplate::getId, stageIds));
+        return templates.stream()
+                .collect(Collectors.toMap(
+                        PromotionStageTemplate::getId,
+                        PromotionStageTemplate::getName,
+                        (v1, v2) -> v1));
+    }
+
+    /**
+     * 批量获取推广单元的进度数据（避免N+1查询）
+     * @return unitId -> progressList 的映射
+     */
+    private Map<Long, List<PromotionProgress>> batchGetProgress(List<PromotionUnit> units) {
+        List<Long> unitIds = units.stream()
+                .map(PromotionUnit::getId)
+                .collect(Collectors.toList());
+        if (unitIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<PromotionProgress> allProgress = progressMapper.selectList(
+                new LambdaQueryWrapper<PromotionProgress>()
+                        .in(PromotionProgress::getPromotionUnitId, unitIds));
+        return allProgress.stream()
+                .collect(Collectors.groupingBy(PromotionProgress::getPromotionUnitId));
+    }
 
     private void initStageProgress(Long unitId, Long projectId) {
         List<PromotionStageTemplate> templates = stageTemplateMapper.selectList(
@@ -495,23 +576,35 @@ public class PromotionService {
 
     // ==================== VO 转换 ====================
 
-    private PromotionUnitVO toUnitVO(PromotionUnit unit) {
+    /**
+     * 转换为VO（使用预查询的数据，避免N+1）
+     * @param stageNameMap 阶段ID->名称映射
+     * @param progressMap 单元ID->进度列表映射
+     */
+    private PromotionUnitVO toUnitVO(PromotionUnit unit,
+                                      Map<Long, String> stageNameMap,
+                                      Map<Long, List<PromotionProgress>> progressMap) {
         PromotionUnitVO vo = new PromotionUnitVO();
         BeanUtils.copyProperties(unit, vo);
 
-        // 获取当前阶段名称
+        // 使用预查询的阶段名称
         if (unit.getCurrentStageId() != null) {
-            PromotionStageTemplate stage = stageTemplateMapper.selectById(unit.getCurrentStageId());
-            if (stage != null) {
-                vo.setCurrentStageName(stage.getName());
-            }
+            vo.setCurrentStageName(stageNameMap.get(unit.getCurrentStageId()));
         }
 
-        // 获取阶段进度
-        List<PromotionProgress> progressList = progressMapper.selectList(
-                new LambdaQueryWrapper<PromotionProgress>()
-                        .eq(PromotionProgress::getPromotionUnitId, unit.getId()));
-        vo.setStageProgress(progressList.stream().map(this::toProgressVO).collect(Collectors.toList()));
+        // 使用预查询的进度数据
+        List<PromotionProgress> progressList = progressMap.getOrDefault(unit.getId(), Collections.emptyList());
+
+        // 批量查询进度对应的阶段名称
+        List<Long> stageIds = progressList.stream()
+                .map(PromotionProgress::getStageTemplateId)
+                .distinct()
+                .collect(Collectors.toList());
+        Map<Long, String> progressStageNameMap = batchGetStageNameMap(stageIds);
+
+        vo.setStageProgress(progressList.stream()
+                .map(p -> toProgressVO(p, progressStageNameMap))
+                .collect(Collectors.toList()));
 
         return vo;
     }
@@ -522,16 +615,13 @@ public class PromotionService {
         return vo;
     }
 
-    private PromotionProgressVO toProgressVO(PromotionProgress progress) {
+    /**
+     * 转换进度VO（使用预查询的阶段名称）
+     */
+    private PromotionProgressVO toProgressVO(PromotionProgress progress, Map<Long, String> stageNameMap) {
         PromotionProgressVO vo = new PromotionProgressVO();
         BeanUtils.copyProperties(progress, vo);
-
-        // 获取阶段名称
-        PromotionStageTemplate stage = stageTemplateMapper.selectById(progress.getStageTemplateId());
-        if (stage != null) {
-            vo.setStageName(stage.getName());
-        }
-
+        vo.setStageName(stageNameMap.get(progress.getStageTemplateId()));
         return vo;
     }
 

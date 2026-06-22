@@ -1,6 +1,7 @@
 package com.pm.auth.filter;
 
 import com.pm.auth.config.JwtTokenProvider;
+import com.pm.auth.service.AuthService;
 import com.pm.common.entity.SysUser;
 import com.pm.common.mapper.SysUserMapper;
 import com.pm.common.util.UserContext;
@@ -22,6 +23,9 @@ import java.util.Collections;
 
 /**
  * JWT 认证过滤器
+ * 1. 校验 token 有效性
+ * 2. 检查 token 是否在 Redis 黑名单中（已登出）
+ * 3. 设置 UserContext 和 Spring Security 上下文
  */
 @Slf4j
 @Component
@@ -30,6 +34,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final SysUserMapper sysUserMapper;
+    private final AuthService authService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -38,6 +43,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String token = extractToken(request);
             if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
+                // 检查 token 是否已被登出（黑名单）
+                if (authService.isTokenBlacklisted(token)) {
+                    log.debug("Token is blacklisted (logged out), skipping authentication");
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
                 Long userId = jwtTokenProvider.getUserIdFromToken(token);
                 String role = jwtTokenProvider.getRoleFromToken(token);
                 String username = jwtTokenProvider.parseToken(token).getSubject();

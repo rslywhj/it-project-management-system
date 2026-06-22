@@ -63,6 +63,7 @@ public class ResourceService {
         return toResourceVO(resource);
     }
 
+    @RequirePermission("resource:view")
     public PageResult<ResourceVO> listResources(Long projectId, int page, int size, String availability) {
         LambdaQueryWrapper<Resource> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Resource::getProjectId, projectId)
@@ -76,6 +77,7 @@ public class ResourceService {
         return PageResult.of(voList, result.getTotal(), page, size);
     }
 
+    @RequirePermission("resource:view")
     public ResourceVO getResource(Long resourceId) {
         Resource resource = resourceMapper.selectById(resourceId);
         if (resource == null) {
@@ -106,6 +108,7 @@ public class ResourceService {
     // ==================== 工时填报 ====================
 
     @Transactional
+    @RequirePermission("resource:create")
     public WorkLogVO logWork(Long projectId, WorkLogRequest request) {
         WorkLog workLog = new WorkLog();
         BeanUtils.copyProperties(request, workLog);
@@ -119,6 +122,7 @@ public class ResourceService {
         return toWorkLogVO(workLog);
     }
 
+    @RequirePermission("resource:view")
     public PageResult<WorkLogVO> listWorkLogs(Long projectId, int page, int size,
                                                Long userId, Long taskId, LocalDate startDate, LocalDate endDate) {
         LambdaQueryWrapper<WorkLog> wrapper = new LambdaQueryWrapper<>();
@@ -137,6 +141,7 @@ public class ResourceService {
     }
 
     @Transactional
+    @RequirePermission("resource:edit")
     public WorkLogVO updateWorkLog(Long workLogId, WorkLogRequest request) {
         WorkLog workLog = workLogMapper.selectById(workLogId);
         if (workLog == null) {
@@ -149,12 +154,14 @@ public class ResourceService {
     }
 
     @Transactional
+    @RequirePermission("resource:delete")
     public void deleteWorkLog(Long workLogId) {
         workLogMapper.deleteById(workLogId);
     }
 
     // ==================== 资源负载分析 ====================
 
+    @RequirePermission("resource:view")
     public WorkloadReportVO getWorkloadReport(Long projectId) {
         WorkloadReportVO report = new WorkloadReportVO();
         report.setProjectId(projectId);

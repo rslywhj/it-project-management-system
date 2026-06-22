@@ -1,59 +1,88 @@
 package com.pm.auth.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.pm.auth.config.JwtTokenProvider;
 import com.pm.auth.dto.LoginRequest;
 import com.pm.auth.dto.TokenResponse;
 import com.pm.auth.dto.UserInfoVO;
+import com.pm.common.entity.SysUser;
+import com.pm.common.entity.SysUserRole;
 import com.pm.common.exception.BusinessException;
+import com.pm.common.mapper.SysPermissionMapper;
+import com.pm.common.mapper.SysUserMapper;
+import com.pm.common.mapper.SysUserRoleMapper;
 import com.pm.common.result.ResultCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 /**
- * 认证服务
- * 注意：初期使用内存用户，后续接入数据库用户表
+ * 认证服务 — 对接数据库用户表，实现真正的 RBAC 登录
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
+    private final SysUserMapper sysUserMapper;
+    private final SysUserRoleMapper sysUserRoleMapper;
+    private final SysPermissionMapper sysPermissionMapper;
+    private final StringRedisTemplate stringRedisTemplate;
 
-    // TODO: 替换为数据库查询
-    private static final String DEFAULT_USERNAME = "admin";
-    private static final String DEFAULT_PASSWORD = "$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi"; // Admin@123456
-    private static final Long DEFAULT_USER_ID = 1L;
-    private static final String DEFAULT_ROLE = "super_admin";  // 与数据库一致
-    private static final String DEFAULT_REAL_NAME = "系统管理员";
+    /** Redis key 前缀：token 黑名单 */
+    private static final String TOKEN_BLACKLIST_PREFIX = "auth:token:blacklist:";
 
     /**
      * 用户登录
      */
     public TokenResponse login(LoginRequest request) {
-        // TODO: 从数据库查询用户
-        if (!DEFAULT_USERNAME.equals(request.getUsername())) {
+        // 1. 从数据库查询用户
+        SysUser user = sysUserMapper.selectOne(
+                new LambdaQueryWrapper<SysUser>()
+                        .eq(SysUser::getUsername, request.getUsername()));
+
+        if (user == null) {
             throw new BusinessException(ResultCode.USER_NOT_FOUND);
         }
 
-        // 校验密码（BCrypt加密）
-        // 开发环境临时逻辑：允许 admin/Admin@123456 登录
-        if (!passwordEncoder.matches(request.getPassword(), DEFAULT_PASSWORD)
-                && !"Admin@123456".equals(request.getPassword())) {
+        // 2. 检查用户状态
+        if (!"active".equals(user.getStatus())) {
+            throw new BusinessException(ResultCode.USER_DISABLED);
+        }
+
+        // 3. 校验密码（仅 BCrypt，无明文后门）
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new BusinessException(ResultCode.USER_PASSWORD_ERROR);
         }
 
-        String accessToken = jwtTokenProvider.generateAccessToken(
-                DEFAULT_USER_ID, DEFAULT_USERNAME, DEFAULT_ROLE);
-        String refreshToken = jwtTokenProvider.generateRefreshToken(
-                DEFAULT_USER_ID, DEFAULT_USERNAME);
+        // 4. 查询用户角色（取第一个角色用于 JWT claim）
+        List<String> roleCodes = sysPermissionMapper.selectRoleCodesByUserId(user.getId());
+        String primaryRole = roleCodes.isEmpty() ? "guest" : roleCodes.get(0);
 
+        // 5. 生成 Token
+        String accessToken = jwtTokenProvider.generateAccessToken(
+                user.getId(), user.getUsername(), primaryRole);
+        String refreshToken = jwtTokenProvider.generateRefreshToken(
+                user.getId(), user.getUsername());
+
+        // 6. 更新最后登录时间
+        user.setLastLoginAt(LocalDateTime.now());
+        sysUserMapper.updateById(user);
+
+        // 7. 构建返回
         UserInfoVO userInfo = UserInfoVO.builder()
-                .userId(DEFAULT_USER_ID)
-                .username(DEFAULT_USERNAME)
-                .realName(DEFAULT_REAL_NAME)
-                .role(DEFAULT_ROLE)
+                .userId(user.getId())
+                .username(user.getUsername())
+                .realName(user.getRealName() != null ? user.getRealName() : user.getUsername())
+                .role(primaryRole)
                 .build();
 
         return TokenResponse.builder()
@@ -73,13 +102,25 @@ public class AuthService {
             throw new BusinessException(ResultCode.TOKEN_EXPIRED);
         }
 
+        // 检查 refresh token 是否在黑名单中
+        if (isTokenBlacklisted(refreshToken)) {
+            throw new BusinessException(ResultCode.TOKEN_EXPIRED);
+        }
+
         Long userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
         String username = jwtTokenProvider.parseToken(refreshToken).getSubject();
 
-        // TODO: 从数据库查询用户角色
-        String role = DEFAULT_ROLE;
+        // 查询用户是否存在且状态正常
+        SysUser user = sysUserMapper.selectById(userId);
+        if (user == null || !"active".equals(user.getStatus())) {
+            throw new BusinessException(ResultCode.USER_NOT_FOUND);
+        }
 
-        String newAccessToken = jwtTokenProvider.generateAccessToken(userId, username, role);
+        // 查询用户角色
+        List<String> roleCodes = sysPermissionMapper.selectRoleCodesByUserId(user.getId());
+        String primaryRole = roleCodes.isEmpty() ? "guest" : roleCodes.get(0);
+
+        String newAccessToken = jwtTokenProvider.generateAccessToken(userId, username, primaryRole);
         String newRefreshToken = jwtTokenProvider.generateRefreshToken(userId, username);
 
         return TokenResponse.builder()
@@ -88,5 +129,33 @@ public class AuthService {
                 .tokenType("Bearer")
                 .expiresIn(jwtTokenProvider.getAccessTokenExpiration() / 1000)
                 .build();
+    }
+
+    /**
+     * 登出：将当前 token 加入 Redis 黑名单
+     */
+    public void logout(String token) {
+        if (token == null || token.isEmpty()) {
+            return;
+        }
+        try {
+            // 计算 token 剩余有效期，作为黑名单 key 的 TTL
+            long remainingMs = jwtTokenProvider.getTokenRemainingMs(token);
+            if (remainingMs > 0) {
+                String key = TOKEN_BLACKLIST_PREFIX + token;
+                stringRedisTemplate.opsForValue().set(key, "1", remainingMs, TimeUnit.MILLISECONDS);
+                log.info("Token added to blacklist, expires in {}ms", remainingMs);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to blacklist token: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * 检查 token 是否在黑名单中
+     */
+    public boolean isTokenBlacklisted(String token) {
+        String key = TOKEN_BLACKLIST_PREFIX + token;
+        return Boolean.TRUE.equals(stringRedisTemplate.hasKey(key));
     }
 }

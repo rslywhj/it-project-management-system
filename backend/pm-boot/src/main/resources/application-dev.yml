@@ -10,6 +10,14 @@ spring:
       port: 6379
       database: 0
 
+# 开发环境 JWT 密钥（仅用于本地开发，生产环境必须通过环境变量覆盖）
+jwt:
+  secret: DevOnlySecretKeyMustBe256BitsLongForLocalDevelopment!!
+
+# 开发环境 CORS 允许的来源（可包含多个，逗号分隔）
+cors:
+  allowed-origins: http://localhost:5173,http://localhost:3000,http://localhost:8080
+
 # 开发环境日志级别
 logging:
   level:

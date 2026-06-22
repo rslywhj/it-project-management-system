@@ -100,10 +100,14 @@ INSERT INTO `sys_permission` (`id`, `permission_code`, `permission_name`, `modul
 (50, 'risk:delete',      '删除风险',       'risk',       'delete',  '删除风险',               50),
 -- 资源管理（resource）
 (51, 'resource:view',    '查看资源',       'resource',   'view',    '查看资源和工时',            51),
-(52, 'resource:manage',  '管理资源',       'resource',   'manage',  '资源分配和工时管理',         52),
+(52, 'resource:create',  '创建资源',       'resource',   'create',  '创建资源',               52),
+(55, 'resource:edit',    '编辑资源',       'resource',   'edit',    '编辑资源',               55),
+(56, 'resource:delete',  '删除资源',       'resource',   'delete',  '删除资源',               56),
 -- 知识库（knowledge）
 (53, 'knowledge:view',   '查看知识库',     'knowledge',  'view',    '查看知识库文章',            53),
-(54, 'knowledge:manage', '管理知识库',     'knowledge',  'manage',  '创建和编辑知识库文章',       54);
+(54, 'knowledge:create', '创建知识库',     'knowledge',  'create',  '创建知识库文章和模板',       54),
+(57, 'knowledge:edit',   '编辑知识库',     'knowledge',  'edit',    '编辑知识库文章和模板',       57),
+(58, 'knowledge:delete', '删除知识库',     'knowledge',  'delete',  '删除知识库文章和模板',       58);
 
 -- ============================================================
 -- 第三部分：角色-权限映射
@@ -151,10 +155,10 @@ INSERT INTO `sys_role_permission` (`role_id`, `permission_id`) VALUES
 (@role_project_admin, 39), (@role_project_admin, 40),
 -- risk: view/create/edit/delete
 (@role_project_admin, 47), (@role_project_admin, 48), (@role_project_admin, 49), (@role_project_admin, 50),
--- resource: view/manage
-(@role_project_admin, 51), (@role_project_admin, 52),
--- knowledge: view/manage
-(@role_project_admin, 53), (@role_project_admin, 54);
+-- resource: view/create/edit/delete
+(@role_project_admin, 51), (@role_project_admin, 52), (@role_project_admin, 55), (@role_project_admin, 56),
+-- knowledge: view/create/edit/delete
+(@role_project_admin, 53), (@role_project_admin, 54), (@role_project_admin, 57), (@role_project_admin, 58);
 
 -- -----------------------------------------------------------
 -- 项目经理（role_id=3）
@@ -180,10 +184,10 @@ INSERT INTO `sys_role_permission` (`role_id`, `permission_id`) VALUES
 (@role_project_manager, 39),
 -- risk: view/create/edit
 (@role_project_manager, 47), (@role_project_manager, 48), (@role_project_manager, 49),
--- resource: view
-(@role_project_manager, 51),
--- knowledge: view
-(@role_project_manager, 53);
+-- resource: view/create
+(@role_project_manager, 51), (@role_project_manager, 52),
+-- knowledge: view/create
+(@role_project_manager, 53), (@role_project_manager, 54);
 
 -- -----------------------------------------------------------
 -- 推广管理员（role_id=4）
@@ -290,10 +294,10 @@ INSERT INTO `sys_role_permission` (`role_id`, `permission_id`) VALUES
 (@role_developer, 39),
 -- risk: view
 (@role_developer, 47),
--- resource: view
-(@role_developer, 51),
--- knowledge: view
-(@role_developer, 53);
+-- resource: view/create（开发人员可填报工时）
+(@role_developer, 51), (@role_developer, 52),
+-- knowledge: view/create（开发人员可贡献知识库）
+(@role_developer, 53), (@role_developer, 54);
 
 -- -----------------------------------------------------------
 -- 测试人员（role_id=8）

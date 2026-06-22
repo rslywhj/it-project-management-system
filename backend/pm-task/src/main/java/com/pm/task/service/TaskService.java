@@ -21,6 +21,7 @@ import org.springframework.util.StringUtils;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -162,11 +163,13 @@ public class TaskService {
                         .eq(Task::getProjectId, projectId)
                         .orderByAsc(Task::getWbsCode));
 
-        // 获取所有依赖关系
-        List<TaskDependency> allDeps = dependencyMapper.selectList(
-                new LambdaQueryWrapper<TaskDependency>()
-                        .inSql(TaskDependency::getTaskId,
-                                "SELECT id FROM task WHERE project_id = " + projectId));
+        // 获取所有依赖关系（使用已查询的任务ID列表，避免 SQL 拼接）
+        List<Long> taskIds = allTasks.stream().map(Task::getId).collect(Collectors.toList());
+        List<TaskDependency> allDeps = taskIds.isEmpty()
+                ? Collections.emptyList()
+                : dependencyMapper.selectList(
+                        new LambdaQueryWrapper<TaskDependency>()
+                                .in(TaskDependency::getTaskId, taskIds));
         Map<Long, List<Long>> depMap = allDeps.stream()
                 .collect(Collectors.groupingBy(TaskDependency::getTaskId,
                         Collectors.mapping(TaskDependency::getDependsOnTaskId, Collectors.toList())));

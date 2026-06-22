@@ -183,6 +183,7 @@ import {
   getWbsTree,
 } from '@/api/task'
 import type { Task, TaskCreateRequest } from '@/types/task'
+import { TASK_TYPE_LABEL, TASK_STATUS_LABEL, TASK_STATUS_TYPE, PRIORITY_TYPE, labelFrom, tagType } from '@/constants'
 import GanttChart from './components/GanttChart.vue'
 import TaskDetailDrawer from './components/TaskDetailDrawer.vue'
 
@@ -229,18 +230,11 @@ const progressDialogVisible = ref(false)
 const progressTaskId = ref<number | null>(null)
 const progressValue = ref(0)
 
-// 映射
-const typeMap: Record<string, string> = {
-  dev: '开发', test: '测试', design: '设计', research: '调研', deploy: '部署', other: '其他',
-}
-const statusLabelMap: Record<string, string> = { todo: '待办', in_progress: '进行中', done: '已完成' }
-const statusTypeMap: Record<string, 'info' | 'warning' | 'success'> = { todo: 'info', in_progress: 'warning', done: 'success' }
-const priorityTypeMap: Record<string, 'danger' | 'warning' | 'info'> = { critical: 'danger', high: 'warning', medium: 'info', low: 'info' }
-
-function typeLabel(t: string) { return typeMap[t] ?? t }
-function statusLabel(s: string) { return statusLabelMap[s] ?? s }
-function statusType(s: string): 'info' | 'warning' | 'success' { return statusTypeMap[s] ?? 'info' }
-function priorityType(p: string): 'danger' | 'warning' | 'info' { return priorityTypeMap[p] ?? 'info' }
+// 映射（来自 @/constants）
+function typeLabel(t: string) { return labelFrom(TASK_TYPE_LABEL, t) }
+function statusLabel(s: string) { return labelFrom(TASK_STATUS_LABEL, s) }
+function statusType(s: string) { return tagType(TASK_STATUS_TYPE, s) }
+function priorityType(p: string) { return tagType(PRIORITY_TYPE, p) }
 
 async function loadData() {
   loading.value = true

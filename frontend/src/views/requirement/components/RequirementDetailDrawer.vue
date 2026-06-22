@@ -27,6 +27,7 @@
 import { ref, watch } from 'vue'
 import { getRequirementDetail } from '@/api/requirement'
 import type { Requirement } from '@/types/requirement'
+import { REQUIREMENT_STATUS_LABEL, REQUIREMENT_STATUS_TYPE, PRIORITY_TYPE, labelFrom, tagType } from '@/constants'
 
 const visible = defineModel<boolean>({ default: false })
 const props = defineProps<{ requirementId: number | null }>()
@@ -34,17 +35,9 @@ const props = defineProps<{ requirementId: number | null }>()
 const loading = ref(false)
 const requirement = ref<Requirement | null>(null)
 
-const statusLabelMap: Record<string, string> = {
-  draft: '草稿', reviewing: '评审中', approved: '已通过', rejected: '已拒绝', scheduled: '已排期', done: '已完成',
-}
-const statusTypeMap: Record<string, 'info' | 'warning' | 'success' | 'danger'> = {
-  draft: 'info', reviewing: 'warning', approved: 'success', rejected: 'danger', scheduled: 'warning', done: 'success',
-}
-const priorityTypeMap: Record<string, 'danger' | 'warning' | 'info'> = { critical: 'danger', high: 'warning', medium: 'info', low: 'info' }
-
-function statusLabel(s: string) { return statusLabelMap[s] ?? s }
-function statusType(s: string) { return statusTypeMap[s] ?? 'info' }
-function priorityType(p: string) { return priorityTypeMap[p] ?? 'info' }
+function statusLabel(s: string) { return labelFrom(REQUIREMENT_STATUS_LABEL, s) }
+function statusType(s: string) { return tagType(REQUIREMENT_STATUS_TYPE, s) }
+function priorityType(p: string) { return tagType(PRIORITY_TYPE, p) }
 
 watch(() => props.requirementId, async (id) => {
   if (!id || !visible.value) return

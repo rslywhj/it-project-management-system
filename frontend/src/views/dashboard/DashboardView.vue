@@ -91,6 +91,7 @@
 import { reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getDashboardStats, type DashboardStats } from '@/api/system'
+import { TASK_STATUS_LABEL, TASK_STATUS_TYPE, labelFrom, tagType } from '@/constants'
 
 const stats = reactive<DashboardStats>({
   projectCount: 0,
@@ -100,11 +101,8 @@ const stats = reactive<DashboardStats>({
   recentTasks: [],
 })
 
-const statusLabelMap: Record<string, string> = { todo: '待办', in_progress: '进行中', done: '已完成' }
-const statusTypeMap: Record<string, 'info' | 'warning' | 'success'> = { todo: 'info', in_progress: 'warning', done: 'success' }
-
-function statusLabel(s: string) { return statusLabelMap[s] ?? s }
-function statusType(s: string) { return statusTypeMap[s] ?? 'info' }
+function statusLabel(s: string) { return labelFrom(TASK_STATUS_LABEL, s) }
+function statusType(s: string) { return tagType(TASK_STATUS_TYPE, s) }
 
 async function loadStats() {
   try {

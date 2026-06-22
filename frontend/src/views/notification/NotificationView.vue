@@ -55,6 +55,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getNotificationList, markAsRead, markAllAsRead, type Notification } from '@/api/notification'
+import { NOTIFICATION_TYPE_LABEL, NOTIFICATION_TYPE_TAG, labelFrom, tagType } from '@/constants'
 
 const loading = ref(false)
 const notificationList = ref<Notification[]>([])
@@ -62,15 +63,8 @@ const total = ref(0)
 const filterRead = ref<number | undefined>(undefined)
 const queryParams = reactive({ page: 1, size: 10 })
 
-const typeMap: Record<string, string> = {
-  task: '任务', requirement: '需求', project: '项目', system: '系统',
-}
-const typeTagMap: Record<string, 'primary' | 'success' | 'warning' | 'info' | 'danger'> = {
-  task: 'primary', requirement: 'success', project: 'warning', system: 'info',
-}
-
-function typeLabel(t: string) { return typeMap[t] ?? t }
-function typeTag(t: string): 'primary' | 'success' | 'warning' | 'info' | 'danger' { return typeTagMap[t] ?? 'info' }
+function typeLabel(t: string) { return labelFrom(NOTIFICATION_TYPE_LABEL, t) }
+function typeTag(t: string) { return tagType(NOTIFICATION_TYPE_TAG, t) }
 
 async function loadData() {
   loading.value = true

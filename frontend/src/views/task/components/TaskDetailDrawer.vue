@@ -49,6 +49,7 @@
 import { ref, watch } from 'vue'
 import { getTaskDetail, getSubtasks } from '@/api/task'
 import type { Task } from '@/types/task'
+import { TASK_TYPE_LABEL, TASK_STATUS_LABEL, TASK_STATUS_TYPE, PRIORITY_TYPE, labelFrom, tagType } from '@/constants'
 
 const visible = defineModel<boolean>({ default: false })
 const props = defineProps<{ taskId: number | null }>()
@@ -57,15 +58,10 @@ const loading = ref(false)
 const task = ref<Task | null>(null)
 const subtasks = ref<Task[]>([])
 
-const typeMap: Record<string, string> = { dev: '开发', test: '测试', design: '设计', research: '调研', deploy: '部署', other: '其他' }
-const statusLabelMap: Record<string, string> = { todo: '待办', in_progress: '进行中', done: '已完成' }
-const statusTypeMap: Record<string, 'info' | 'warning' | 'success'> = { todo: 'info', in_progress: 'warning', done: 'success' }
-const priorityTypeMap: Record<string, 'danger' | 'warning' | 'info'> = { critical: 'danger', high: 'warning', medium: 'info', low: 'info' }
-
-function typeLabel(t: string) { return typeMap[t] ?? t }
-function statusLabel(s: string) { return statusLabelMap[s] ?? s }
-function statusType(s: string) { return statusTypeMap[s] ?? 'info' }
-function priorityType(p: string) { return priorityTypeMap[p] ?? 'info' }
+function typeLabel(t: string) { return labelFrom(TASK_TYPE_LABEL, t) }
+function statusLabel(s: string) { return labelFrom(TASK_STATUS_LABEL, s) }
+function statusType(s: string) { return tagType(TASK_STATUS_TYPE, s) }
+function priorityType(p: string) { return tagType(PRIORITY_TYPE, p) }
 
 watch(() => props.taskId, async (id) => {
   if (!id || !visible.value) return

@@ -28,7 +28,7 @@ public class BugRequest {
     @Schema(description = "实际结果")
     private String actualResult;
 
-    @Pattern(regexp = ValidationPatterns.PRIORITY, message = "严重程度必须为 critical/high/medium/low")
+    @Pattern(regexp = ValidationPatterns.SEVERITY, message = "严重程度必须为 critical/major/minor/trivial")
     @Schema(description = "严重程度（critical/major/minor/trivial）")
     private String severity;
 

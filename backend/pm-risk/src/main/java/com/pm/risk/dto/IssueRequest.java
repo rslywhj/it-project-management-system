@@ -21,10 +21,11 @@ public class IssueRequest {
     @Schema(description = "问题描述")
     private String description;
 
+    @Pattern(regexp = ValidationPatterns.ISSUE_CATEGORY, message = "类别必须为 technical/process/resource/communication/other")
     @Schema(description = "类别（technical/process/resource/communication/other）")
     private String category;
 
-    @Pattern(regexp = ValidationPatterns.PRIORITY, message = "严重程度必须为 critical/high/medium/low")
+    @Pattern(regexp = ValidationPatterns.SEVERITY, message = "严重程度必须为 critical/major/minor/trivial")
     @Schema(description = "严重程度（critical/major/minor/trivial）")
     private String severity;
 

@@ -10,6 +10,8 @@ import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Field;
 import java.sql.Connection;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -51,24 +53,37 @@ public class DataPermissionInterceptor implements Interceptor {
 
             // 仅对包含 project_id 列的查询追加条件
             if (originalSql.contains("project_id")) {
-                String modifiedSql = appendProjectScope(originalSql, projectId);
+                String modifiedSql = appendProjectScope(originalSql);
                 Field sqlField = BoundSql.class.getDeclaredField("sql");
                 sqlField.setAccessible(true);
                 sqlField.set(boundSql, modifiedSql);
+
+                // 将 projectId 作为参数绑定，避免 SQL 注入
+                Field paramMappingField = BoundSql.class.getDeclaredField("parameterMappings");
+                paramMappingField.setAccessible(true);
+                @SuppressWarnings("unchecked")
+                List<org.apache.ibatis.mapping.ParameterMapping> paramMappings =
+                        new ArrayList<>((List<org.apache.ibatis.mapping.ParameterMapping>) paramMappingField.get(boundSql));
+                org.apache.ibatis.mapping.ParameterMapping projectIdMapping =
+                        new org.apache.ibatis.mapping.ParameterMapping.Builder(
+                                boundSql.getConfiguration(), "__dataPermissionProjectId", Long.class).build();
+                paramMappings.add(projectIdMapping);
+                paramMappingField.set(boundSql, paramMappings);
+
+                boundSql.setAdditionalParameter("__dataPermissionProjectId", projectId);
             }
         }
 
         return invocation.proceed();
     }
 
-    private String appendProjectScope(String sql, Long projectId) {
-        // 简单实现：在 WHERE 子句后追加 project_id 条件
+    private String appendProjectScope(String sql) {
+        // 简单实现：在 WHERE 子句后追加 project_id 条件（使用参数化查询 ? 占位符）
         // 生产环境建议使用 JSqlParser 等库做更精确的 SQL 改写
         if (sql.contains("WHERE") || sql.contains("where")) {
-            return sql + " AND project_id = " + projectId;
+            return sql + " AND project_id = ?";
         } else {
-            // 找到 FROM 子句后的第一个表别名
-            return sql + " WHERE project_id = " + projectId;
+            return sql + " WHERE project_id = ?";
         }
     }
 

@@ -63,6 +63,7 @@ service.interceptors.response.use(
       ElMessage.error(res.message || '请求失败')
       return Promise.reject(new Error(res.message || '请求失败'))
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- 拦截器解包 ApiResult<T> → T，调用方通过泛型约束类型
     return res.data as any
   },
   (error) => {
@@ -77,7 +78,7 @@ service.interceptors.response.use(
 )
 
 // ─── 401 统一处理：刷新 Token 并重试失败请求 ─────────────────
-function handleTokenExpired(failedConfig: AxiosRequestConfig & { _retry?: boolean }): Promise<any> {
+function handleTokenExpired(failedConfig: AxiosRequestConfig & { _retry?: boolean }): Promise<unknown> {
   // 已经在重试的请求，直接跳过
   if (failedConfig._retry) {
     clearTokens()

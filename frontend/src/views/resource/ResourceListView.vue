@@ -198,12 +198,9 @@ async function loadUtilization() {
 async function loadTimesheets() {
   timesheetLoading.value = true
   try {
-    const params: any = {}
-    if (timesheetDateRange.value) {
-      params.startDate = timesheetDateRange.value[0]
-      params.endDate = timesheetDateRange.value[1]
-    }
-    const data = await getTimesheetList(props.projectId, params)
+    const startDate = timesheetDateRange.value?.[0]
+    const endDate = timesheetDateRange.value?.[1]
+    const data = await getTimesheetList(props.projectId, { page: 1, size: 50, startDate, endDate })
     timesheetList.value = data.records || []
   } catch { /* handled */ } finally { timesheetLoading.value = false }
 }

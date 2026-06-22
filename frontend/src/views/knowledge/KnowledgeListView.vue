@@ -153,7 +153,7 @@ const flatCategories = computed(() => {
   const flatten = (items: KnowledgeCategory[]) => {
     items.forEach((item) => {
       result.push(item)
-      if ((item as any).children) flatten((item as any).children)
+      if (item.children) flatten(item.children)
     })
   }
   flatten(categoryTree.value)
@@ -201,11 +201,13 @@ async function loadCategories() {
 async function loadArticles() {
   loading.value = true
   try {
-    if (selectedCategoryId.value) queryParams.categoryId = selectedCategoryId.value
-    else delete (queryParams as any).categoryId
-    if (searchKeyword.value) (queryParams as any).keyword = searchKeyword.value
-    else delete (queryParams as any).keyword
-    const data = await getArticleList(props.projectId, queryParams)
+    const data = await getArticleList(props.projectId, {
+      page: queryParams.page,
+      size: queryParams.size,
+      status: queryParams.status,
+      categoryId: selectedCategoryId.value ?? undefined,
+      keyword: searchKeyword.value || undefined,
+    })
     articleList.value = data.records
     total.value = data.total
   } catch { /* handled */ } finally { loading.value = false }

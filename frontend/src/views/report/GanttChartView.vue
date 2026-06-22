@@ -78,6 +78,7 @@ const loading = ref(false)
 const ganttLib = ref<'vue-ganttastic' | 'dhtmlx-gantt'>('vue-ganttastic')
 const tasks = ref<GanttTask[]>([])
 const dhtmlxContainer = ref<HTMLElement | null>(null)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- dhtmlx-gantt 缺少类型定义
 let ganttInstance: any = null
 
 interface GanttBar {

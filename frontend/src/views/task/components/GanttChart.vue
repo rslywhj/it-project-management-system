@@ -50,6 +50,7 @@ const props = defineProps<{ tasks: Task[] }>()
 
 const ganttLib = ref<'vue-ganttastic' | 'dhtmlx-gantt'>('vue-ganttastic')
 const dhtmlxContainer = ref<HTMLElement | null>(null)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- dhtmlx-gantt 缺少类型定义
 let ganttInstance: any = null
 
 // vue-ganttastic 数据转换

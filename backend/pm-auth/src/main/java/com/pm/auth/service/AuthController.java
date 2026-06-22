@@ -7,8 +7,10 @@ import com.pm.common.result.Result;
 import com.pm.common.util.UserContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -37,9 +39,12 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    @Operation(summary = "用户登出", description = "登出（客户端清除 Token 即可）")
-    public Result<Void> logout() {
-        // JWT 无状态，服务端无需处理；如需 Token 黑名单可在此实现
+    @Operation(summary = "用户登出", description = "登出并将当前 Token 加入服务端黑名单")
+    public Result<Void> logout(HttpServletRequest request) {
+        String token = extractToken(request);
+        if (StringUtils.hasText(token)) {
+            authService.logout(token);
+        }
         return Result.ok();
     }
 
@@ -66,5 +71,13 @@ public class AuthController {
         result.put("orgId", user.getOrgId());
 
         return Result.ok(result);
+    }
+
+    private String extractToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
     }
 }

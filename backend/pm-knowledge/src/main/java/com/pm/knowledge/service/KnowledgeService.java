@@ -32,6 +32,7 @@ public class KnowledgeService {
     // ==================== 文章管理 ====================
 
     @Transactional
+    @RequirePermission("knowledge:create")
     public ArticleVO createArticle(Long projectId, ArticleRequest request) {
         KnowledgeArticle article = new KnowledgeArticle();
         BeanUtils.copyProperties(request, article);
@@ -43,6 +44,7 @@ public class KnowledgeService {
         return toArticleVO(article);
     }
 
+    @RequirePermission("knowledge:view")
     public PageResult<ArticleVO> listArticles(Long projectId, int page, int size,
                                                String keyword, String category, String status) {
         LambdaQueryWrapper<KnowledgeArticle> wrapper = new LambdaQueryWrapper<>();
@@ -59,6 +61,7 @@ public class KnowledgeService {
         return PageResult.of(voList, result.getTotal(), page, size);
     }
 
+    @RequirePermission("knowledge:view")
     public ArticleVO getArticle(Long articleId) {
         KnowledgeArticle article = articleMapper.selectById(articleId);
         if (article == null) {
@@ -71,6 +74,7 @@ public class KnowledgeService {
     }
 
     @Transactional
+    @RequirePermission("knowledge:edit")
     public ArticleVO updateArticle(Long articleId, ArticleRequest request) {
         KnowledgeArticle article = articleMapper.selectById(articleId);
         if (article == null) {
@@ -83,6 +87,7 @@ public class KnowledgeService {
     }
 
     @Transactional
+    @RequirePermission("knowledge:edit")
     public ArticleVO publishArticle(Long articleId) {
         KnowledgeArticle article = articleMapper.selectById(articleId);
         if (article == null) {
@@ -94,6 +99,7 @@ public class KnowledgeService {
     }
 
     @Transactional
+    @RequirePermission("knowledge:edit")
     public ArticleVO archiveArticle(Long articleId) {
         KnowledgeArticle article = articleMapper.selectById(articleId);
         if (article == null) {
@@ -105,10 +111,12 @@ public class KnowledgeService {
     }
 
     @Transactional
+    @RequirePermission("knowledge:delete")
     public void deleteArticle(Long articleId) {
         articleMapper.deleteById(articleId);
     }
 
+    @RequirePermission("knowledge:view")
     public List<ArticleVO> searchArticles(Long projectId, String keyword) {
         LambdaQueryWrapper<KnowledgeArticle> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(projectId != null, KnowledgeArticle::getProjectId, projectId)
@@ -124,6 +132,7 @@ public class KnowledgeService {
     // ==================== 模板管理 ====================
 
     @Transactional
+    @RequirePermission("knowledge:create")
     public TemplateVO createTemplate(TemplateRequest request) {
         Template template = new Template();
         BeanUtils.copyProperties(request, template);
@@ -133,6 +142,7 @@ public class KnowledgeService {
         return toTemplateVO(template);
     }
 
+    @RequirePermission("knowledge:view")
     public PageResult<TemplateVO> listTemplates(int page, int size, String type) {
         LambdaQueryWrapper<Template> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(StringUtils.hasText(type), Template::getType, type)
@@ -146,6 +156,7 @@ public class KnowledgeService {
         return PageResult.of(voList, result.getTotal(), page, size);
     }
 
+    @RequirePermission("knowledge:view")
     public TemplateVO getTemplate(Long templateId) {
         Template template = templateMapper.selectById(templateId);
         if (template == null) {
@@ -155,6 +166,7 @@ public class KnowledgeService {
     }
 
     @Transactional
+    @RequirePermission("knowledge:edit")
     public TemplateVO updateTemplate(Long templateId, TemplateRequest request) {
         Template template = templateMapper.selectById(templateId);
         if (template == null) {
@@ -170,6 +182,7 @@ public class KnowledgeService {
     }
 
     @Transactional
+    @RequirePermission("knowledge:delete")
     public void deleteTemplate(Long templateId) {
         Template template = templateMapper.selectById(templateId);
         if (template == null) {

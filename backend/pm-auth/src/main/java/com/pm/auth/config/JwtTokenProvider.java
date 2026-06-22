@@ -2,6 +2,7 @@ package com.pm.auth.config;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -19,7 +20,7 @@ import java.util.Map;
 @Component
 public class JwtTokenProvider {
 
-    @Value("${jwt.secret:defaultSecretKeyMustBeAtLeast256BitsLongForHS256Algorithm}")
+    @Value("${jwt.secret}")
     private String secret;
 
     @Value("${jwt.access-token-expiration:7200000}")
@@ -27,6 +28,16 @@ public class JwtTokenProvider {
 
     @Value("${jwt.refresh-token-expiration:604800000}")
     private long refreshTokenExpiration; // 7d
+
+    @PostConstruct
+    public void validateConfig() {
+        if (secret == null || secret.trim().isEmpty()) {
+            throw new IllegalStateException("jwt.secret must be configured via JWT_SECRET environment variable");
+        }
+        if (secret.length() < 32) {
+            throw new IllegalStateException("jwt.secret must be at least 32 characters (256 bits)");
+        }
+    }
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
@@ -107,6 +118,16 @@ public class JwtTokenProvider {
     public String getRoleFromToken(String token) {
         Claims claims = parseToken(token);
         return claims.get("role", String.class);
+    }
+
+    /**
+     * 获取 Token 剩余有效时间（毫秒）
+     */
+    public long getTokenRemainingMs(String token) {
+        Claims claims = parseToken(token);
+        Date expiration = claims.getExpiration();
+        long remaining = expiration.getTime() - System.currentTimeMillis();
+        return Math.max(0, remaining);
     }
 
     /**

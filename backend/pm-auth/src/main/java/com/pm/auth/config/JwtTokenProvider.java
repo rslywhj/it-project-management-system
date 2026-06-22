@@ -2,8 +2,11 @@ package com.pm.auth.config;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -19,7 +22,9 @@ import java.util.Map;
 @Component
 public class JwtTokenProvider {
 
-    @Value("${jwt.secret:defaultSecretKeyMustBeAtLeast256BitsLongForHS256Algorithm}")
+    private static final String TOKEN_BLACKLIST_PREFIX = "token:blacklist:";
+
+    @Value("${jwt.secret}")
     private String secret;
 
     @Value("${jwt.access-token-expiration:7200000}")
@@ -27,6 +32,19 @@ public class JwtTokenProvider {
 
     @Value("${jwt.refresh-token-expiration:604800000}")
     private long refreshTokenExpiration; // 7d
+
+    @Autowired(required = false)
+    private StringRedisTemplate stringRedisTemplate;
+
+    @PostConstruct
+    public void init() {
+        if (secret == null || secret.isEmpty() || secret.contains("default")) {
+            throw new IllegalArgumentException(
+                    "JWT_SECRET 环境变量未设置或使用了不安全的默认值。" +
+                    "请通过环境变量 JWT_SECRET 设置一个安全的密钥（至少256位）。");
+        }
+        log.info("JWT密钥已从环境变量加载");
+    }
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
@@ -79,10 +97,15 @@ public class JwtTokenProvider {
     }
 
     /**
-     * 校验 Token 有效性
+     * 校验 Token 有效性（包括黑名单检查）
      */
     public boolean validateToken(String token) {
         try {
+            // 检查Token是否在黑名单中
+            if (isTokenBlacklisted(token)) {
+                log.warn("Token已被撤销（在黑名单中）");
+                return false;
+            }
             parseToken(token);
             return true;
         } catch (ExpiredJwtException e) {
@@ -91,6 +114,16 @@ public class JwtTokenProvider {
             log.warn("Invalid JWT token: {}", e.getMessage());
         }
         return false;
+    }
+
+    /**
+     * 检查Token是否在黑名单中
+     */
+    private boolean isTokenBlacklisted(String token) {
+        if (stringRedisTemplate == null) {
+            return false;
+        }
+        return Boolean.TRUE.equals(stringRedisTemplate.hasKey(TOKEN_BLACKLIST_PREFIX + token));
     }
 
     /**

@@ -162,11 +162,15 @@ public class TaskService {
                         .eq(Task::getProjectId, projectId)
                         .orderByAsc(Task::getWbsCode));
 
-        // 获取所有依赖关系
-        List<TaskDependency> allDeps = dependencyMapper.selectList(
-                new LambdaQueryWrapper<TaskDependency>()
-                        .inSql(TaskDependency::getTaskId,
-                                "SELECT id FROM task WHERE project_id = " + projectId));
+        // 获取所有依赖关系（先查询项目内任务 ID，再用参数化的 IN 查询，避免 SQL 注入）
+        List<Long> projectTaskIds = allTasks.stream()
+                .map(Task::getId)
+                .collect(Collectors.toList());
+        List<TaskDependency> allDeps = projectTaskIds.isEmpty()
+                ? List.of()
+                : dependencyMapper.selectList(
+                        new LambdaQueryWrapper<TaskDependency>()
+                                .in(TaskDependency::getTaskId, projectTaskIds));
         Map<Long, List<Long>> depMap = allDeps.stream()
                 .collect(Collectors.groupingBy(TaskDependency::getTaskId,
                         Collectors.mapping(TaskDependency::getDependsOnTaskId, Collectors.toList())));

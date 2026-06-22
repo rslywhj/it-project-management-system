@@ -1,7 +1,10 @@
 package com.pm.risk.dto;
 
+import com.pm.common.validation.ValidationPatterns;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -11,6 +14,7 @@ import java.time.LocalDate;
 public class IssueRequest {
 
     @NotBlank(message = "问题标题不能为空")
+    @Size(max = 200, message = "问题标题不能超过200个字符")
     @Schema(description = "问题标题", requiredMode = Schema.RequiredMode.REQUIRED)
     private String title;
 
@@ -20,6 +24,7 @@ public class IssueRequest {
     @Schema(description = "类别（technical/process/resource/communication/other）")
     private String category;
 
+    @Pattern(regexp = ValidationPatterns.PRIORITY, message = "严重程度必须为 critical/high/medium/low")
     @Schema(description = "严重程度（critical/major/minor/trivial）")
     private String severity;
 

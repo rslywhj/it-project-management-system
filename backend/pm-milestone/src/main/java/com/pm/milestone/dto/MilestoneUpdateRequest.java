@@ -1,6 +1,8 @@
 package com.pm.milestone.dto;
 
+import com.pm.common.validation.ValidationPatterns;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -21,6 +23,7 @@ public class MilestoneUpdateRequest {
     @Schema(description = "实际完成日期")
     private LocalDate actualDate;
 
+    @Pattern(regexp = ValidationPatterns.MILESTONE_STATUS, message = "状态必须为 pending/in_progress/at_risk/completed/delayed")
     @Schema(description = "状态（pending/in_progress/at_risk/completed/delayed）")
     private String status;
 

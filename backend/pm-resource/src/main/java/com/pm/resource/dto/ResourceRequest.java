@@ -2,6 +2,7 @@ package com.pm.resource.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -17,6 +18,7 @@ public class ResourceRequest {
     @Schema(description = "技能标签（逗号分隔）")
     private String skillTags;
 
+    @Pattern(regexp = "^(available|busy|unavailable)$", message = "可用状态必须为 available/busy/unavailable")
     @Schema(description = "可用状态（available/busy/unavailable/on_leave）")
     private String availability;
 

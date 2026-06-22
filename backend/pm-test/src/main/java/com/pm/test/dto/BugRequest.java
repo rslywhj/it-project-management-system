@@ -1,7 +1,10 @@
 package com.pm.test.dto;
 
+import com.pm.common.validation.ValidationPatterns;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
@@ -9,6 +12,7 @@ import lombok.Data;
 public class BugRequest {
 
     @NotBlank(message = "缺陷标题不能为空")
+    @Size(max = 200, message = "缺陷标题不能超过200个字符")
     @Schema(description = "缺陷标题", requiredMode = Schema.RequiredMode.REQUIRED)
     private String title;
 
@@ -24,9 +28,11 @@ public class BugRequest {
     @Schema(description = "实际结果")
     private String actualResult;
 
+    @Pattern(regexp = ValidationPatterns.PRIORITY, message = "严重程度必须为 critical/high/medium/low")
     @Schema(description = "严重程度（critical/major/minor/trivial）")
     private String severity;
 
+    @Pattern(regexp = ValidationPatterns.PRIORITY, message = "优先级必须为 critical/high/medium/low")
     @Schema(description = "优先级")
     private String priority;
 

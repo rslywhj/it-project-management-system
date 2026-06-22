@@ -2,6 +2,7 @@ package com.pm.resource.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -22,6 +23,7 @@ public class WorkLogRequest {
     @Schema(description = "关联任务ID")
     private Long taskId;
 
+    @Pattern(regexp = "^(development|testing|design|meeting|support|other)$", message = "工作类型必须为 development/testing/design/meeting/support/other")
     @Schema(description = "工作类型（development/testing/meeting/design/review/other）")
     private String workType;
 

@@ -393,7 +393,7 @@ public class PromotionService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         if (!units.isEmpty()) {
             dashboard.setOverallCompletionRate(
-                    overallRate.divide(BigDecimal.valueOf(units.size()), 2, BigDecimal.ROUND_HALF_UP));
+                    overallRate.divide(BigDecimal.valueOf(units.size()), 2, java.math.RoundingMode.HALF_UP));
         } else {
             dashboard.setOverallCompletionRate(BigDecimal.ZERO);
         }
@@ -545,7 +545,7 @@ public class PromotionService {
         BigDecimal totalRate = progressList.stream()
                 .map(PromotionProgress::getCompletionRate)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal avgRate = totalRate.divide(BigDecimal.valueOf(progressList.size()), 2, BigDecimal.ROUND_HALF_UP);
+        BigDecimal avgRate = totalRate.divide(BigDecimal.valueOf(progressList.size()), 2, java.math.RoundingMode.HALF_UP);
 
         PromotionUnit unit = unitMapper.selectById(unitId);
         if (unit != null) {

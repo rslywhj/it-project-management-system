@@ -265,7 +265,7 @@ public class TaskService {
         BigDecimal totalRate = children.stream()
                 .map(Task::getCompletionRate)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal avgRate = totalRate.divide(BigDecimal.valueOf(children.size()), 2, BigDecimal.ROUND_HALF_UP);
+        BigDecimal avgRate = totalRate.divide(BigDecimal.valueOf(children.size()), 2, java.math.RoundingMode.HALF_UP);
 
         Task parent = taskMapper.selectById(parentTaskId);
         if (parent != null) {

@@ -46,7 +46,7 @@ public class TaskService {
         task.setWbsCode(generateWbsCode(projectId, request.getParentTaskId()));
 
         taskMapper.insert(task);
-        return toVO(task);
+        return toVO(task, Collections.emptyList());
     }
 
     public PageResult<TaskVO> listTasks(Long projectId, int page, int size,
@@ -59,8 +59,14 @@ public class TaskService {
                 .orderByAsc(Task::getWbsCode);
 
         Page<Task> result = taskMapper.selectPage(new Page<>(page, size), wrapper);
-        List<TaskVO> voList = result.getRecords().stream()
-                .map(this::toVO)
+        List<Task> tasks = result.getRecords();
+
+        // 批量查询依赖关系
+        Map<Long, List<Long>> depMap = batchGetDependencies(tasks.stream()
+                .map(Task::getId).collect(Collectors.toList()));
+
+        List<TaskVO> voList = tasks.stream()
+                .map(t -> toVO(t, depMap.getOrDefault(t.getId(), Collections.emptyList())))
                 .collect(Collectors.toList());
         return PageResult.of(voList, result.getTotal(), page, size);
     }
@@ -70,7 +76,9 @@ public class TaskService {
         if (task == null) {
             throw new BusinessException(ResultCode.TASK_NOT_FOUND);
         }
-        return toVO(task);
+        // 单个任务的依赖查询
+        List<Long> deps = getTaskDependencies(taskId);
+        return toVO(task, deps);
     }
 
     @Transactional
@@ -83,7 +91,8 @@ public class TaskService {
         BeanUtils.copyProperties(request, task, "id", "projectId", "status", "completionRate",
                 "wbsCode", "createdAt", "createdBy");
         taskMapper.updateById(task);
-        return toVO(task);
+        List<Long> deps = getTaskDependencies(taskId);
+        return toVO(task, deps);
     }
 
     @Transactional
@@ -114,7 +123,8 @@ public class TaskService {
             updateParentTaskProgress(task.getParentTaskId());
         }
 
-        return toVO(task);
+        List<Long> deps = getTaskDependencies(taskId);
+        return toVO(task, deps);
     }
 
     @Transactional
@@ -151,7 +161,14 @@ public class TaskService {
                 new LambdaQueryWrapper<Task>()
                         .eq(Task::getParentTaskId, parentTaskId)
                         .orderByAsc(Task::getWbsCode));
-        return tasks.stream().map(this::toVO).collect(Collectors.toList());
+
+        // 批量查询依赖关系
+        Map<Long, List<Long>> depMap = batchGetDependencies(tasks.stream()
+                .map(Task::getId).collect(Collectors.toList()));
+
+        return tasks.stream()
+                .map(t -> toVO(t, depMap.getOrDefault(t.getId(), Collections.emptyList())))
+                .collect(Collectors.toList());
     }
 
     /**
@@ -163,16 +180,9 @@ public class TaskService {
                         .eq(Task::getProjectId, projectId)
                         .orderByAsc(Task::getWbsCode));
 
-        // 获取所有依赖关系（使用已查询的任务ID列表，避免 SQL 拼接）
-        List<Long> taskIds = allTasks.stream().map(Task::getId).collect(Collectors.toList());
-        List<TaskDependency> allDeps = taskIds.isEmpty()
-                ? Collections.emptyList()
-                : dependencyMapper.selectList(
-                        new LambdaQueryWrapper<TaskDependency>()
-                                .in(TaskDependency::getTaskId, taskIds));
-        Map<Long, List<Long>> depMap = allDeps.stream()
-                .collect(Collectors.groupingBy(TaskDependency::getTaskId,
-                        Collectors.mapping(TaskDependency::getDependsOnTaskId, Collectors.toList())));
+        // 批量查询所有依赖关系
+        Map<Long, List<Long>> depMap = batchGetDependencies(allTasks.stream()
+                .map(Task::getId).collect(Collectors.toList()));
 
         // 构建树
         Map<Long, List<Task>> parentMap = allTasks.stream()
@@ -205,8 +215,8 @@ public class TaskService {
 
     private TaskVO buildTree(Task task, Map<Long, List<Task>> parentMap,
                               Map<Long, List<Long>> depMap) {
-        TaskVO vo = toVO(task);
-        vo.setDependsOnTaskIds(depMap.getOrDefault(task.getId(), List.of()));
+        List<Long> deps = depMap.getOrDefault(task.getId(), Collections.emptyList());
+        TaskVO vo = toVO(task, deps);
 
         List<Task> children = parentMap.getOrDefault(task.getId(), List.of());
         if (!children.isEmpty()) {
@@ -217,6 +227,36 @@ public class TaskService {
         return vo;
     }
 
+    /**
+     * 批量查询任务依赖关系
+     * @param taskIds 任务ID列表
+     * @return taskId -> dependsOnTaskIds 的映射
+     */
+    private Map<Long, List<Long>> batchGetDependencies(List<Long> taskIds) {
+        if (taskIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<TaskDependency> allDeps = dependencyMapper.selectList(
+                new LambdaQueryWrapper<TaskDependency>()
+                        .in(TaskDependency::getTaskId, taskIds));
+        return allDeps.stream()
+                .collect(Collectors.groupingBy(
+                        TaskDependency::getTaskId,
+                        Collectors.mapping(TaskDependency::getDependsOnTaskId, Collectors.toList())));
+    }
+
+    /**
+     * 获取单个任务的依赖ID列表
+     */
+    private List<Long> getTaskDependencies(Long taskId) {
+        List<TaskDependency> deps = dependencyMapper.selectList(
+                new LambdaQueryWrapper<TaskDependency>()
+                        .eq(TaskDependency::getTaskId, taskId));
+        return deps.stream()
+                .map(TaskDependency::getDependsOnTaskId)
+                .collect(Collectors.toList());
+    }
+
     private void updateParentTaskProgress(Long parentTaskId) {
         List<Task> children = taskMapper.selectList(
                 new LambdaQueryWrapper<Task>().eq(Task::getParentTaskId, parentTaskId));
@@ -225,7 +265,7 @@ public class TaskService {
         BigDecimal totalRate = children.stream()
                 .map(Task::getCompletionRate)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal avgRate = totalRate.divide(BigDecimal.valueOf(children.size()), 2, BigDecimal.ROUND_HALF_UP);
+        BigDecimal avgRate = totalRate.divide(BigDecimal.valueOf(children.size()), 2, java.math.RoundingMode.HALF_UP);
 
         Task parent = taskMapper.selectById(parentTaskId);
         if (parent != null) {
@@ -283,15 +323,13 @@ public class TaskService {
         }
     }
 
-    private TaskVO toVO(Task task) {
+    /**
+     * 转换为VO（接受预查询的依赖列表，避免N+1）
+     */
+    private TaskVO toVO(Task task, List<Long> dependsOnTaskIds) {
         TaskVO vo = new TaskVO();
         BeanUtils.copyProperties(task, vo);
-        // 获取依赖
-        List<TaskDependency> deps = dependencyMapper.selectList(
-                new LambdaQueryWrapper<TaskDependency>().eq(TaskDependency::getTaskId, task.getId()));
-        vo.setDependsOnTaskIds(deps.stream()
-                .map(TaskDependency::getDependsOnTaskId)
-                .collect(Collectors.toList()));
+        vo.setDependsOnTaskIds(dependsOnTaskIds != null ? dependsOnTaskIds : Collections.emptyList());
         return vo;
     }
 }

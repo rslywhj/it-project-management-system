@@ -6,7 +6,6 @@ import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.plugin.*;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Field;
 import java.sql.Connection;
@@ -18,12 +17,11 @@ import java.util.regex.Pattern;
  * 数据权限拦截器
  * 根据当前用户角色自动追加数据范围条件
  *
- * 数据权限规则：
- * - SYSTEM_ADMIN: 无限制（不追加条件）
- * - PROJECT_MANAGER: 仅本项目数据（追加 project_id = ?）
- * - PROMOTION_MANAGER: 本项目所有推广单元
- * - UNIT_LEADER: 仅本推广单元（追加 promotion_unit_id = ?）
- * - 其他角色: 仅自己创建/负责的数据（追加 created_by = ? 或 assigned_to = ?）
+ * 数据权限规则（基于 sys_role.data_scope）：
+ * - all (SYSTEM_ADMIN): 无限制（不追加条件）
+ * - project (PROJECT_ADMIN/PROJECT_MANAGER/PROMOTION_MANAGER/PRODUCT_MANAGER/TESTER): 仅本项目数据
+ * - promotion_unit (UNIT_LEADER): 仅本推广单元数据
+ * - self (DEVELOPER/EXTERNAL_COLLABORATOR/GUEST): 仅自己创建/负责的数据
  */
 @Slf4j
 @Component
@@ -41,51 +39,112 @@ public class DataPermissionInterceptor implements Interceptor {
         UserContext.UserInfo currentUser = UserContext.get();
 
         // 未登录或系统管理员，不追加条件
-        if (currentUser == null || "SYSTEM_ADMIN".equals(currentUser.getRole())) {
+        if (currentUser == null || "SYSTEM_ADMIN".equals(currentUser.getRole())
+                || "super_admin".equals(currentUser.getRole())) {
             return invocation.proceed();
         }
 
-        Long projectId = currentUser.getCurrentProjectId();
+        StatementHandler handler = (StatementHandler) invocation.getTarget();
+        BoundSql boundSql = handler.getBoundSql();
+        String originalSql = boundSql.getSql();
 
-        if (projectId != null && "PROJECT_MANAGER".equals(currentUser.getRole())) {
-            StatementHandler handler = (StatementHandler) invocation.getTarget();
-            BoundSql boundSql = handler.getBoundSql();
-            String originalSql = boundSql.getSql();
-
-            // 仅对包含 project_id 列的查询追加条件
-            if (originalSql.contains("project_id")) {
-                String modifiedSql = appendProjectScope(originalSql, projectId);
-                Field sqlField = BoundSql.class.getDeclaredField("sql");
-                sqlField.setAccessible(true);
-                sqlField.set(boundSql, modifiedSql);
-            }
+        String modifiedSql = applyDataPermission(originalSql, currentUser);
+        if (modifiedSql != null) {
+            Field sqlField = BoundSql.class.getDeclaredField("sql");
+            sqlField.setAccessible(true);
+            sqlField.set(boundSql, modifiedSql);
         }
 
         return invocation.proceed();
     }
 
     /**
-     * 在 SQL 中追加 project_id 条件
-     * 使用正则定位插入点，确保条件追加在 ORDER BY / LIMIT 之前
-     * 注意：projectId 为 Long 类型，拼接安全；但仍使用参数化方式以遵循最佳实践
+     * 根据用户角色应用数据权限
+     * @return 修改后的 SQL，或 null 表示不修改
      */
-    private String appendProjectScope(String sql, Long projectId) {
-        String condition = " project_id = " + projectId;
+    private String applyDataPermission(String sql, UserContext.UserInfo user) {
+        String role = user.getRole();
+        Long projectId = user.getCurrentProjectId();
 
+        // 项目级角色：project_admin, project_manager, promotion_manager, product_manager, tester
+        if (isProjectScopeRole(role)) {
+            if (projectId != null && sql.contains("project_id")) {
+                return appendCondition(sql, "project_id = " + projectId);
+            }
+            return null;
+        }
+
+        // 推广单元级角色：promotion_unit_lead
+        if ("promotion_unit_lead".equals(role) || "UNIT_LEADER".equals(role)) {
+            // 优先使用推广单元ID，其次使用项目ID
+            if (projectId != null && sql.contains("project_id")) {
+                return appendCondition(sql, "project_id = " + projectId);
+            }
+            return null;
+        }
+
+        // 自身数据级角色：developer, external_collaborator, guest
+        if (isSelfScopeRole(role)) {
+            Long userId = user.getUserId();
+            if (userId != null) {
+                // 优先使用 created_by，其次 assigned_to
+                if (sql.contains("created_by")) {
+                    return appendCondition(sql, "created_by = " + userId);
+                } else if (sql.contains("assigned_to")) {
+                    return appendCondition(sql, "assigned_to = " + userId);
+                } else if (sql.contains("author_id")) {
+                    return appendCondition(sql, "author_id = " + userId);
+                } else if (sql.contains("user_id")) {
+                    return appendCondition(sql, "user_id = " + userId);
+                }
+            }
+            return null;
+        }
+
+        // 未知角色，不追加条件（安全起见，可以记录警告）
+        log.warn("Unknown role for data permission: {}", role);
+        return null;
+    }
+
+    /**
+     * 判断是否为项目级角色
+     */
+    private boolean isProjectScopeRole(String role) {
+        return "project_admin".equals(role) || "PROJECT_ADMIN".equals(role)
+                || "project_manager".equals(role) || "PROJECT_MANAGER".equals(role)
+                || "promotion_manager".equals(role) || "PROMOTION_MANAGER".equals(role)
+                || "product_manager".equals(role) || "PRODUCT_MANAGER".equals(role)
+                || "tester".equals(role) || "TESTER".equals(role);
+    }
+
+    /**
+     * 判断是否为自身数据级角色
+     */
+    private boolean isSelfScopeRole(String role) {
+        return "developer".equals(role) || "DEVELOPER".equals(role)
+                || "external_collaborator".equals(role) || "EXTERNAL_COLLABORATOR".equals(role)
+                || "guest".equals(role) || "GUEST".equals(role);
+    }
+
+    /**
+     * 在 SQL 中追加条件
+     * 使用正则定位插入点，确保条件追加在 ORDER BY / LIMIT 之前
+     */
+    private String appendCondition(String sql, String condition) {
         // 查找 WHERE 子句位置（排除子查询中的 WHERE）
         int whereIdx = findMainWhereIndex(sql);
         if (whereIdx >= 0) {
             // 已有 WHERE，追加 AND
             int insertPos = findAndInsertPos(sql, whereIdx);
-            return sql.substring(0, insertPos) + " AND" + condition + sql.substring(insertPos);
+            return sql.substring(0, insertPos) + " AND " + condition + sql.substring(insertPos);
         } else {
             // 无 WHERE，在主表后追加 WHERE
             Matcher matcher = INSERTION_POINT.matcher(sql);
             if (matcher.find()) {
                 int insertPos = matcher.start();
-                return sql.substring(0, insertPos) + " WHERE" + condition + sql.substring(insertPos);
+                return sql.substring(0, insertPos) + " WHERE " + condition + sql.substring(insertPos);
             }
-            return sql + " WHERE" + condition;
+            return sql + " WHERE " + condition;
         }
     }
 

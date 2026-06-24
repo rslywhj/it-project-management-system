@@ -23,3 +23,8 @@ logging:
   level:
     com.pm: DEBUG
     org.springframework.security: DEBUG
+
+# 开发环境 MyBatis SQL日志（输出到控制台）
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

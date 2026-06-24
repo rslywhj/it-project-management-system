@@ -1,5 +1,6 @@
 package com.pm.resource.dto;
 
+import com.pm.common.validation.ValidationPatterns;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -18,7 +19,7 @@ public class ResourceRequest {
     @Schema(description = "技能标签（逗号分隔）")
     private String skillTags;
 
-    @Pattern(regexp = "^(available|busy|unavailable)$", message = "可用状态必须为 available/busy/unavailable")
+    @Pattern(regexp = ValidationPatterns.AVAILABILITY, message = "可用状态必须为 available/busy/unavailable/on_leave")
     @Schema(description = "可用状态（available/busy/unavailable/on_leave）")
     private String availability;
 

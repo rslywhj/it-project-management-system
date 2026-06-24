@@ -170,7 +170,8 @@ public class ProjectService {
     }
 
     private String generateProjectCode() {
-        // 简单实现：PM + 时间戳后6位
-        return "PM" + (System.currentTimeMillis() % 1000000);
+        // 使用UUID生成唯一项目编码，避免竞态条件
+        String uuid = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
+        return "PM" + uuid;
     }
 }

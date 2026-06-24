@@ -1,5 +1,6 @@
 package com.pm.resource.dto;
 
+import com.pm.common.validation.ValidationPatterns;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -23,7 +24,7 @@ public class WorkLogRequest {
     @Schema(description = "关联任务ID")
     private Long taskId;
 
-    @Pattern(regexp = "^(development|testing|design|meeting|support|other)$", message = "工作类型必须为 development/testing/design/meeting/support/other")
+    @Pattern(regexp = ValidationPatterns.WORK_TYPE, message = "工作类型必须为 development/testing/meeting/design/review/other")
     @Schema(description = "工作类型（development/testing/meeting/design/review/other）")
     private String workType;
 

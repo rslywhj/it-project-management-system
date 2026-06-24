@@ -1,7 +1,7 @@
 package com.pm.auth.service;
 
-import com.pm.auth.dto.LoginRequest;
-import com.pm.auth.dto.TokenResponse;
+import com.pm.auth.dto.*;
+import com.pm.common.entity.SysUser;
 import com.pm.common.mapper.SysPermissionMapper;
 import com.pm.common.result.Result;
 import com.pm.common.util.UserContext;
@@ -70,6 +70,38 @@ public class AuthController {
         result.put("permissions", permissions);
         result.put("orgId", user.getOrgId());
 
+        return Result.ok(result);
+    }
+
+    @PostMapping("/change-password")
+    @Operation(summary = "修改密码", description = "修改当前用户密码")
+    public Result<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        UserContext.UserInfo user = UserContext.get();
+        if (user == null) {
+            return Result.fail(401, "未登录");
+        }
+        authService.changePassword(user.getUserId(), request.getOldPassword(), request.getNewPassword());
+        return Result.ok();
+    }
+
+    @PutMapping("/profile")
+    @Operation(summary = "更新个人信息", description = "更新当前用户的个人信息")
+    public Result<Object> updateProfile(@Valid @RequestBody UpdateProfileRequest request) {
+        UserContext.UserInfo user = UserContext.get();
+        if (user == null) {
+            return Result.fail(401, "未登录");
+        }
+        SysUser updatedUser = authService.updateProfile(
+                user.getUserId(), request.getRealName(), request.getEmail(),
+                request.getPhone(), request.getAvatar());
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("userId", updatedUser.getId());
+        result.put("username", updatedUser.getUsername());
+        result.put("realName", updatedUser.getRealName());
+        result.put("email", updatedUser.getEmail());
+        result.put("phone", updatedUser.getPhone());
+        result.put("avatar", updatedUser.getAvatar());
         return Result.ok(result);
     }
 

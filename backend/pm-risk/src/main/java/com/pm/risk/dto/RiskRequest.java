@@ -21,14 +21,15 @@ public class RiskRequest {
     @Schema(description = "风险描述")
     private String description;
 
+    @Pattern(regexp = ValidationPatterns.RISK_CATEGORY, message = "类别必须为 technical/resource/schedule/quality/external")
     @Schema(description = "类别（technical/resource/schedule/quality/external）")
     private String category;
 
-    @Pattern(regexp = ValidationPatterns.PRIORITY, message = "发生概率必须为 critical/high/medium/low")
+    @Pattern(regexp = ValidationPatterns.PROBABILITY, message = "发生概率必须为 high/medium/low")
     @Schema(description = "发生概率（high/medium/low）")
     private String probability;
 
-    @Pattern(regexp = ValidationPatterns.PRIORITY, message = "影响程度必须为 critical/high/medium/low")
+    @Pattern(regexp = ValidationPatterns.IMPACT, message = "影响程度必须为 high/medium/low")
     @Schema(description = "影响程度（high/medium/low）")
     private String impact;
 

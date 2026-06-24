@@ -272,7 +272,7 @@ async function handleBatchSubmit() {
   }
 }
 
-async function handleDelete(row: any) {
+async function handleDelete(row: PromotionUnit) {
   try {
     await ElMessageBox.confirm(`确定删除推广单元「${row.orgName}」？`, '提示', { type: 'warning' })
     await deletePromotionUnit(row.id)
@@ -281,13 +281,13 @@ async function handleDelete(row: any) {
   } catch { /* cancelled */ }
 }
 
-function handleViewProgress(row: any) {
-  currentUnit.value = row as PromotionUnit
+function handleViewProgress(row: PromotionUnit) {
+  currentUnit.value = row
   progressDrawerVisible.value = true
 }
 
-function handleViewRequirements(row: any) {
-  currentUnit.value = row as PromotionUnit
+function handleViewRequirements(row: PromotionUnit) {
+  currentUnit.value = row
   requirementDrawerVisible.value = true
 }
 

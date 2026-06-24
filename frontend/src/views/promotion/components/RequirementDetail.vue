@@ -120,14 +120,14 @@ function handleCreate() {
   dialogVisible.value = true
 }
 
-function handleEdit(row: any) {
+function handleEdit(row: UnitRequirement) {
   isEdit.value = true
   editingId.value = row.id
   Object.assign(formData, { title: row.title, description: row.description, type: row.type, priority: row.priority })
   dialogVisible.value = true
 }
 
-async function handleDelete(row: any) {
+async function handleDelete(row: UnitRequirement) {
   try {
     await ElMessageBox.confirm(`确定删除需求「${row.title}」？`, '提示', { type: 'warning' })
     await deleteUnitRequirement(row.id)

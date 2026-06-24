@@ -119,11 +119,11 @@
         </el-form-item>
         <el-form-item label="类型">
           <el-select v-model="formData.type" placeholder="请选择任务类型">
-            <el-option label="开发" value="development" />
-            <el-option label="测试" value="testing" />
+            <el-option label="开发" value="dev" />
+            <el-option label="测试" value="test" />
             <el-option label="设计" value="design" />
             <el-option label="调研" value="research" />
-            <el-option label="部署" value="deployment" />
+            <el-option label="部署" value="deploy" />
             <el-option label="其他" value="other" />
           </el-select>
         </el-form-item>
@@ -165,6 +165,9 @@
         <el-button type="primary" @click="handleProgressSubmit">确定</el-button>
       </template>
     </el-dialog>
+
+    <!-- 任务详情抽屉 -->
+    <TaskDetailDrawer v-model="detailDrawerVisible" :task-id="detailTaskId" />
   </div>
 </template>
 
@@ -180,7 +183,9 @@ import {
   getWbsTree,
 } from '@/api/task'
 import type { Task, TaskCreateRequest } from '@/types/task'
+import { TASK_TYPE_LABEL, TASK_STATUS_LABEL, TASK_STATUS_TYPE, PRIORITY_TYPE, labelFrom, tagType } from '@/constants'
 import GanttChart from './components/GanttChart.vue'
+import TaskDetailDrawer from './components/TaskDetailDrawer.vue'
 
 const props = defineProps<{ projectId: number }>()
 
@@ -203,6 +208,10 @@ const isEdit = ref(false)
 const submitLoading = ref(false)
 const formRef = ref<FormInstance>()
 const editingId = ref<number | null>(null)
+
+// 详情抽屉
+const detailDrawerVisible = ref(false)
+const detailTaskId = ref<number | null>(null)
 const dateRange = ref<[string, string] | null>(null)
 const formData = reactive<TaskCreateRequest>({
   title: '',
@@ -221,18 +230,11 @@ const progressDialogVisible = ref(false)
 const progressTaskId = ref<number | null>(null)
 const progressValue = ref(0)
 
-// 映射
-const typeMap: Record<string, string> = {
-  dev: '开发', test: '测试', design: '设计', research: '调研', deploy: '部署', other: '其他',
-}
-const statusLabelMap: Record<string, string> = { todo: '待办', in_progress: '进行中', done: '已完成' }
-const statusTypeMap: Record<string, 'info' | 'warning' | 'success'> = { todo: 'info', in_progress: 'warning', done: 'success' }
-const priorityTypeMap: Record<string, 'danger' | 'warning' | 'info'> = { critical: 'danger', high: 'warning', medium: 'info', low: 'info' }
-
-function typeLabel(t: string) { return typeMap[t] ?? t }
-function statusLabel(s: string) { return statusLabelMap[s] ?? s }
-function statusType(s: string): 'info' | 'warning' | 'success' { return statusTypeMap[s] ?? 'info' }
-function priorityType(p: string): 'danger' | 'warning' | 'info' { return priorityTypeMap[p] ?? 'info' }
+// 映射（来自 @/constants）
+function typeLabel(t: string) { return labelFrom(TASK_TYPE_LABEL, t) }
+function statusLabel(s: string) { return labelFrom(TASK_STATUS_LABEL, s) }
+function statusType(s: string) { return tagType(TASK_STATUS_TYPE, s) }
+function priorityType(p: string) { return tagType(PRIORITY_TYPE, p) }
 
 async function loadData() {
   loading.value = true
@@ -264,7 +266,7 @@ watch(viewMode, (mode) => {
 function handleCreate() {
   isEdit.value = false
   editingId.value = null
-  Object.assign(formData, { title: '', description: '', type: 'development', priority: 'medium', plannedStart: '', plannedEnd: '' })
+  Object.assign(formData, { title: '', description: '', type: 'dev', priority: 'medium', plannedStart: '', plannedEnd: '' })
   dateRange.value = null
   dialogVisible.value = true
 }
@@ -290,8 +292,8 @@ function handleDateChange(val: [string, string] | null) {
 }
 
 function handleViewDetail(row: Task) {
-  // TODO: 打开任务详情抽屉
-  console.log('view task', row.id)
+  detailTaskId.value = row.id
+  detailDrawerVisible.value = true
 }
 
 function handleProgressUpdate(row: Task) {

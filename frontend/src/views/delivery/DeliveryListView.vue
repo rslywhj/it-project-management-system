@@ -94,6 +94,9 @@
         <el-button type="primary" @click="handleReviewSubmit">确定</el-button>
       </template>
     </el-dialog>
+
+    <!-- 交付物详情抽屉 -->
+    <DeliveryDetailDrawer v-model="detailDrawerVisible" :delivery-id="detailDeliveryId" />
   </div>
 </template>
 
@@ -102,6 +105,8 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { getDeliveryList, createDelivery, deleteDelivery, submitDelivery, reviewDelivery } from '@/api/delivery'
 import type { Delivery, DeliveryCreateRequest, DeliveryReviewRequest } from '@/types/delivery'
+import { DELIVERY_TYPE_LABEL, DELIVERY_STATUS_LABEL, DELIVERY_STATUS_TYPE, labelFrom, tagType } from '@/constants'
+import DeliveryDetailDrawer from './components/DeliveryDetailDrawer.vue'
 
 const props = defineProps<{ projectId: number }>()
 
@@ -112,6 +117,10 @@ const queryParams = reactive({ page: 1, size: 10, keyword: '', status: '', type:
 
 // 对话框
 const dialogVisible = ref(false)
+
+// 详情抽屉
+const detailDrawerVisible = ref(false)
+const detailDeliveryId = ref<number | null>(null)
 const dialogTitle = ref('新建交付物')
 const submitLoading = ref(false)
 const formRef = ref<FormInstance>()
@@ -123,15 +132,9 @@ const reviewDialogVisible = ref(false)
 const reviewingId = ref<number | null>(null)
 const reviewData = reactive<DeliveryReviewRequest>({ status: 'approved', reviewComment: '' })
 
-const typeMap: Record<string, string> = { document: '文档', code: '代码', test_report: '测试报告', other: '其他' }
-const statusLabelMap: Record<string, string> = { draft: '草稿', submitted: '已提交', approved: '已通过', rejected: '已驳回' }
-const statusTypeMap: Record<string, 'info' | 'warning' | 'success' | 'danger'> = {
-  draft: 'info', submitted: 'warning', approved: 'success', rejected: 'danger',
-}
-
-function typeLabel(t: string) { return typeMap[t] ?? t }
-function statusLabel(s: string) { return statusLabelMap[s] ?? s }
-function statusType(s: string): 'info' | 'warning' | 'success' | 'danger' { return statusTypeMap[s] ?? 'info' }
+function typeLabel(t: string) { return labelFrom(DELIVERY_TYPE_LABEL, t) }
+function statusLabel(s: string) { return labelFrom(DELIVERY_STATUS_LABEL, s) }
+function statusType(s: string) { return tagType(DELIVERY_STATUS_TYPE, s) }
 
 async function loadData() {
   loading.value = true
@@ -189,8 +192,8 @@ async function handleReviewSubmit() {
 }
 
 function handleViewDetail(row: Delivery) {
-  // TODO: 打开详情抽屉
-  console.log('view delivery', row.id)
+  detailDeliveryId.value = row.id
+  detailDrawerVisible.value = true
 }
 
 function handleNewVersion(row: Delivery) {

@@ -50,7 +50,7 @@ async function handleCommand(command: string) {
       // 用户取消
     }
   } else if (command === 'profile') {
-    // TODO: 跳转个人中心
+    router.push('/profile')
   }
 }
 </script>

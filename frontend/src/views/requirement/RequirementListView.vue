@@ -142,6 +142,9 @@
         <el-button type="primary" @click="handleStatusSubmit">确定</el-button>
       </template>
     </el-dialog>
+
+    <!-- 需求详情抽屉 -->
+    <RequirementDetailDrawer v-model="detailDrawerVisible" :requirement-id="detailRequirementId" />
   </div>
 </template>
 
@@ -157,6 +160,7 @@ import {
 } from '@/api/requirement'
 import { formatDate } from '@/utils'
 import type { Requirement, RequirementCreateRequest, RequirementStatus } from '@/types/requirement'
+import RequirementDetailDrawer from './components/RequirementDetailDrawer.vue'
 
 const props = defineProps<{ projectId: number }>()
 
@@ -177,6 +181,10 @@ const isEdit = ref(false)
 const submitLoading = ref(false)
 const formRef = ref<FormInstance>()
 const editingId = ref<number | null>(null)
+
+// 详情抽屉
+const detailDrawerVisible = ref(false)
+const detailRequirementId = ref<number | null>(null)
 const formData = reactive<RequirementCreateRequest>({
   title: '',
   description: '',
@@ -259,8 +267,8 @@ function handleEdit(row: Requirement) {
 }
 
 function handleViewDetail(row: Requirement) {
-  // TODO: 打开需求详情抽屉
-  console.log('view requirement', row.id)
+  detailRequirementId.value = row.id
+  detailDrawerVisible.value = true
 }
 
 function handleStatusChange(row: Requirement) {

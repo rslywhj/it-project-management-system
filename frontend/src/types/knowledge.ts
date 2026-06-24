@@ -10,6 +10,7 @@ export interface KnowledgeCategory {
   sortOrder: number
   icon?: string
   articleCount?: number
+  children?: KnowledgeCategory[]
   createdAt: string
 }
 

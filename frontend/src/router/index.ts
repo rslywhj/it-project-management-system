@@ -207,14 +207,38 @@ const businessRoutes: RouteRecordRaw[] = [
       {
         path: 'user',
         name: 'UserManage',
-        component: () => import('@/views/dashboard/DashboardView.vue'), // TODO: 替换为用户管理页
+        component: () => import('@/views/system/UserManageView.vue'),
         meta: { title: '用户管理', icon: 'User', permissions: ['system:user'] },
       },
       {
         path: 'role',
         name: 'RoleManage',
-        component: () => import('@/views/dashboard/DashboardView.vue'), // TODO: 替换为角色管理页
+        component: () => import('@/views/system/RoleManageView.vue'),
         meta: { title: '角色管理', icon: 'UserFilled', permissions: ['system:role'] },
+      },
+    ],
+  },
+  {
+    path: '/profile',
+    component: MainLayout,
+    children: [
+      {
+        path: '',
+        name: 'Profile',
+        component: () => import('@/views/profile/ProfileView.vue'),
+        meta: { title: '个人中心', hidden: true },
+      },
+    ],
+  },
+  {
+    path: '/notification',
+    component: MainLayout,
+    children: [
+      {
+        path: '',
+        name: 'Notification',
+        component: () => import('@/views/notification/NotificationView.vue'),
+        meta: { title: '消息通知', icon: 'Bell', hidden: true },
       },
     ],
   },

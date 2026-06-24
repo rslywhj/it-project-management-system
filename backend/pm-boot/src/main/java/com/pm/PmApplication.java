@@ -16,6 +16,7 @@ import org.springframework.context.annotation.ComponentScan;
         "com.pm.promotion.mapper",
         "com.pm.test.mapper",
         "com.pm.delivery.mapper",
+        "com.pm.notification.mapper",
         "com.pm.lowcode.mapper",
         "com.pm.risk.mapper",
         "com.pm.resource.mapper",

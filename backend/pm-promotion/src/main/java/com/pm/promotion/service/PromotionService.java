@@ -233,7 +233,9 @@ public class PromotionService {
         // 更新推广单元整体进度
         updateUnitCompletionRate(unitId);
 
-        return toProgressVO(progress);
+        // 查询阶段名称并返回VO
+        Map<Long, String> stageNameMap = batchGetStageNameMap(List.of(progress.getStageTemplateId()));
+        return toProgressVO(progress, stageNameMap);
     }
 
     public List<PromotionProgressVO> getUnitProgress(Long unitId) {

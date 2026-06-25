@@ -15,9 +15,10 @@ public enum RequirementStatus {
     DRAFT("draft", "草稿"),
     REVIEWING("reviewing", "评审中"),
     APPROVED("approved", "已通过"),
+    REJECTED("rejected", "已驳回"),
     SCHEDULED("scheduled", "已排期"),
-    DONE("done", "已完成"),
-    REJECTED("rejected", "已驳回");
+    IN_PROGRESS("in_progress", "进行中"),
+    DONE("done", "已完成");
 
     private final String code;
     private final String label;
@@ -31,7 +32,8 @@ public enum RequirementStatus {
             case "reviewing" -> Set.of("approved", "rejected");
             case "approved" -> Set.of("scheduled");
             case "rejected" -> Set.of("draft");
-            case "scheduled" -> Set.of("done");
+            case "scheduled" -> Set.of("in_progress");
+            case "in_progress" -> Set.of("done");
             case "done" -> Set.of();
             default -> Set.of();
         };

@@ -52,4 +52,7 @@ public class Requirement extends BaseEntity {
 
     @Schema(description = "实际工时（小时）")
     private BigDecimal actualHours;
+
+    @Schema(description = "备注")
+    private String remark;
 }

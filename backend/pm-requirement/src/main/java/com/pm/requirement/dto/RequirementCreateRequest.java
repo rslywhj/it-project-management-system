@@ -7,6 +7,8 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Data
 @Schema(description = "创建需求请求")
 public class RequirementCreateRequest {
@@ -18,6 +20,9 @@ public class RequirementCreateRequest {
 
     @Schema(description = "需求描述")
     private String description;
+
+    @Schema(description = "验收标准")
+    private String acceptanceCriteria;
 
     @Pattern(regexp = ValidationPatterns.PRIORITY, message = "优先级必须为 critical/high/medium/low")
     @Schema(description = "优先级：critical/high/medium/low", defaultValue = "medium")
@@ -36,4 +41,7 @@ public class RequirementCreateRequest {
 
     @Schema(description = "关联里程碑ID")
     private Long milestoneId;
+
+    @Schema(description = "预估工时（小时）")
+    private BigDecimal estimatedHours;
 }

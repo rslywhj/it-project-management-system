@@ -29,8 +29,11 @@ public class Project extends BaseEntity {
     @Schema(description = "项目类型：software_dev/system_integration/ops")
     private String type;
 
-    @Schema(description = "项目状态：planning/in_progress/closed")
+    @Schema(description = "项目状态：planning/in_progress/on_hold/closed")
     private String status;
+
+    @Schema(description = "优先级：critical/high/medium/low")
+    private String priority;
 
     @Schema(description = "是否启用集团推广模块")
     private Boolean promotionEnabled;
@@ -41,9 +44,18 @@ public class Project extends BaseEntity {
     @Schema(description = "计划结束日期")
     private LocalDate endDate;
 
+    @Schema(description = "实际开始日期")
+    private LocalDate actualStartDate;
+
+    @Schema(description = "实际结束日期")
+    private LocalDate actualEndDate;
+
     @Schema(description = "所属组织ID")
     private Long orgId;
 
     @Schema(description = "项目负责人ID")
     private Long projectManagerId;
+
+    @Schema(description = "备注")
+    private String remark;
 }

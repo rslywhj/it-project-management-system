@@ -22,14 +22,6 @@
             <artifactId>pm-auth</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.pm</groupId>
-            <artifactId>pm-project</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.pm</groupId>
-            <artifactId>pm-task</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>

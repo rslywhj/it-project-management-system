@@ -8,10 +8,6 @@ import com.pm.common.result.PageResult;
 import com.pm.common.util.UserContext;
 import com.pm.common.entity.SysUser;
 import com.pm.common.mapper.SysUserMapper;
-import com.pm.project.domain.Project;
-import com.pm.project.mapper.ProjectMapper;
-import com.pm.task.domain.Task;
-import com.pm.task.mapper.TaskMapper;
 import com.pm.resource.domain.Resource;
 import com.pm.resource.domain.ResourceAllocation;
 import com.pm.resource.domain.Timesheet;
@@ -48,8 +44,6 @@ public class ResourceService {
     private final ResourceAllocationMapper allocationMapper;
     private final TimesheetMapper timesheetMapper;
     private final SysUserMapper sysUserMapper;
-    private final ProjectMapper projectMapper;
-    private final TaskMapper taskMapper;
 
     // ==================== 资源池管理 ====================
 
@@ -491,12 +485,6 @@ public class ResourceService {
         WorkLogVO vo = new WorkLogVO();
         BeanUtils.copyProperties(workLog, vo);
         vo.setUserName(getUserName(workLog.getUserId()));
-        if (workLog.getTaskId() != null) {
-            Task task = taskMapper.selectById(workLog.getTaskId());
-            if (task != null) {
-                vo.setTaskTitle(task.getTitle());
-            }
-        }
         return vo;
     }
 
@@ -504,12 +492,6 @@ public class ResourceService {
         AllocationVO vo = new AllocationVO();
         BeanUtils.copyProperties(allocation, vo);
         vo.setUserName(getUserName(allocation.getUserId()));
-        if (allocation.getProjectId() != null) {
-            Project project = projectMapper.selectById(allocation.getProjectId());
-            if (project != null) {
-                vo.setProjectName(project.getName());
-            }
-        }
         return vo;
     }
 
@@ -517,12 +499,6 @@ public class ResourceService {
         TimesheetVO vo = new TimesheetVO();
         BeanUtils.copyProperties(timesheet, vo);
         vo.setUserName(getUserName(timesheet.getUserId()));
-        if (timesheet.getTaskId() != null) {
-            Task task = taskMapper.selectById(timesheet.getTaskId());
-            if (task != null) {
-                vo.setTaskTitle(task.getTitle());
-            }
-        }
         return vo;
     }
 

@@ -1,5 +1,10 @@
 <template>
   <div class="promotion-unit-list">
+    <el-empty v-if="!hasProject" description="请先选择一个项目">
+      <el-button type="primary" @click="$router.push('/project/list')">选择项目</el-button>
+    </el-empty>
+
+    <template v-else>
     <div class="toolbar">
       <div class="toolbar-left">
         <el-input
@@ -124,11 +129,12 @@
     <el-drawer v-model="requirementDrawerVisible" :title="`${currentUnit?.orgName} - 差异化需求`" size="600px">
       <RequirementDetail v-if="currentUnit" :unit-id="currentUnit.id" />
     </el-drawer>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import {
   getPromotionUnitList,
@@ -141,7 +147,7 @@ import type { PromotionUnit, PromotionUnitCreateRequest } from '@/types/promotio
 import ProgressDetail from './components/ProgressDetail.vue'
 import RequirementDetail from './components/RequirementDetail.vue'
 
-const props = defineProps<{ projectId: number }>()
+const props = defineProps<{ projectId?: number }>()
 
 const loading = ref(false)
 const unitList = ref<PromotionUnit[]>([])
@@ -188,6 +194,7 @@ function statusType(s: string): 'info' | 'warning' | 'success' | 'danger' { retu
 function progressStatus(s: string) { return s === 'completed' ? 'success' : undefined }
 
 async function loadData() {
+  if (!props.projectId) return
   loading.value = true
   try {
     const data = await getPromotionUnitList(props.projectId, queryParams)

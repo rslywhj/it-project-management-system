@@ -142,7 +142,9 @@ import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'elem
 import { getCategoryTree, createCategory, getArticleList, createArticle, updateArticle, archiveArticle } from '@/api/knowledge'
 import type { KnowledgeCategory, KnowledgeArticle, KnowledgeArticleCreateRequest } from '@/types/knowledge'
 
-const props = defineProps<{ projectId: number }>()
+const props = defineProps<{ projectId?: number }>()
+
+const hasProject = computed(() => !!props.projectId && props.projectId > 0)
 
 // 分类
 const categoryTree = ref<KnowledgeCategory[]>([])
@@ -192,6 +194,7 @@ function articleStatusLabel(s: string) { return articleStatusMap[s] ?? s }
 function articleStatusType(s: string): 'info' | 'warning' | 'success' | 'danger' { return articleStatusTypeMap[s] ?? 'info' }
 
 async function loadCategories() {
+  if (!props.projectId) return
   try {
     const data = await getCategoryTree(props.projectId)
     categoryTree.value = Array.isArray(data) ? data : []

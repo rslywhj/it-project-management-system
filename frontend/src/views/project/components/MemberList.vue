@@ -1,5 +1,10 @@
 <template>
   <div class="member-list">
+    <el-empty v-if="!hasProject" description="请先选择一个项目">
+      <el-button type="primary" @click="$router.push('/project/list')">选择项目</el-button>
+    </el-empty>
+
+    <template v-else>
     <div class="toolbar">
       <el-button v-permission="'team:create'" type="primary" size="small" @click="handleAdd">
         <el-icon><Plus /></el-icon>添加成员
@@ -22,6 +27,7 @@
         </template>
       </el-table-column>
     </el-table>
+    </template>
   </div>
 </template>
 
@@ -31,7 +37,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { getProjectMembers, removeProjectMember } from '@/api/project'
 import type { ProjectMember } from '@/types/project'
 
-const props = defineProps<{ projectId: number }>()
+const props = defineProps<{ projectId?: number }>()
 
 const members = ref<ProjectMember[]>([])
 

@@ -1,5 +1,9 @@
 <template>
   <div class="task-list">
+    <el-empty v-if="!hasProject" description="请先选择一个项目">
+      <el-button type="primary" @click="$router.push('/project/list')">选择项目</el-button>
+    </el-empty>
+    <template v-else>
     <div class="toolbar">
       <div class="toolbar-left">
         <el-input
@@ -168,11 +172,12 @@
 
     <!-- 任务详情抽屉 -->
     <TaskDetailDrawer v-model="detailDrawerVisible" :task-id="detailTaskId" />
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import {
   getTaskList,
@@ -187,7 +192,8 @@ import { TASK_TYPE_LABEL, TASK_STATUS_LABEL, TASK_STATUS_TYPE, PRIORITY_TYPE, la
 import GanttChart from './components/GanttChart.vue'
 import TaskDetailDrawer from './components/TaskDetailDrawer.vue'
 
-const props = defineProps<{ projectId: number }>()
+const props = defineProps<{ projectId?: number }>()
+const hasProject = computed(() => !!props.projectId && props.projectId > 0)
 
 const viewMode = ref<'list' | 'wbs' | 'gantt'>('list')
 const loading = ref(false)
@@ -239,6 +245,7 @@ function statusType(s: string) { return tagType(TASK_STATUS_TYPE, s) }
 function priorityType(p: string) { return tagType(PRIORITY_TYPE, p) }
 
 async function loadData() {
+  if (!props.projectId) return
   loading.value = true
   try {
     const data = await getTaskList(props.projectId, queryParams)
@@ -332,6 +339,10 @@ async function handleSubmit() {
       await updateTask(editingId.value, formData)
       ElMessage.success('更新成功')
     } else {
+      if (!props.projectId) {
+        ElMessage.warning('请先选择一个项目')
+        return
+      }
       await createTask(props.projectId, formData)
       ElMessage.success('创建成功')
     }

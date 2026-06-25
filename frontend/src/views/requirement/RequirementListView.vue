@@ -1,5 +1,10 @@
 <template>
   <div class="requirement-list">
+    <el-empty v-if="!hasProject" description="请先选择一个项目">
+      <el-button type="primary" @click="$router.push('/project/list')">选择项目</el-button>
+    </el-empty>
+
+    <template v-else>
     <div class="toolbar">
       <div class="toolbar-left">
         <el-input
@@ -156,11 +161,12 @@
 
     <!-- 需求详情抽屉 -->
     <RequirementDetailDrawer v-model="detailDrawerVisible" :requirement-id="detailRequirementId" />
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import {
   getRequirementList,
@@ -173,8 +179,9 @@ import { formatDate } from '@/utils'
 import type { Requirement, RequirementCreateRequest, RequirementStatus } from '@/types/requirement'
 import RequirementDetailDrawer from './components/RequirementDetailDrawer.vue'
 
-const props = defineProps<{ projectId: number }>()
+const props = defineProps<{ projectId?: number }>()
 
+const hasProject = computed(() => !!props.projectId && props.projectId > 0)
 const loading = ref(false)
 const requirementList = ref<Requirement[]>([])
 const total = ref(0)
@@ -245,6 +252,7 @@ function statusLabel(s: string) { return statusLabelMap[s] ?? s }
 function statusType(s: string): 'info' | 'warning' | 'success' | 'danger' { return statusTypeMap[s] ?? 'info' }
 
 async function loadData() {
+  if (!props.projectId) return
   loading.value = true
   try {
     const data = await getRequirementList(props.projectId, queryParams)
@@ -318,13 +326,17 @@ async function handleDelete(row: Requirement) {
 async function handleSubmit() {
   const valid = await formRef.value?.validate().catch(() => false)
   if (!valid) return
+  if (!isEdit.value && !props.projectId) {
+    ElMessage.warning('请先选择一个项目')
+    return
+  }
   submitLoading.value = true
   try {
     if (isEdit.value && editingId.value) {
       await updateRequirement(editingId.value, formData)
       ElMessage.success('更新成功')
     } else {
-      await createRequirement(props.projectId, formData)
+      await createRequirement(props.projectId!, formData)
       ElMessage.success('创建成功')
     }
     dialogVisible.value = false

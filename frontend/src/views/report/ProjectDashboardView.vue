@@ -122,12 +122,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, reactive, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import * as echarts from 'echarts'
 import { getProjectDashboard, getBurndownData } from '@/api/report'
 import type { ProjectDashboard, BurndownData } from '@/types/report'
 
-const props = defineProps<{ projectId: number }>()
+const props = defineProps<{ projectId?: number }>()
 
 const loading = ref(false)
 const stats = reactive<ProjectDashboard>({
@@ -216,6 +216,7 @@ function renderBurndown(data: BurndownData) {
 }
 
 async function loadData() {
+  if (!props.projectId) return
   loading.value = true
   try {
     const data = await getProjectDashboard(props.projectId)

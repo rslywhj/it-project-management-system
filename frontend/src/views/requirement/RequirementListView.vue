@@ -101,10 +101,17 @@
           </el-select>
         </el-form-item>
         <el-form-item label="分类">
-          <el-input v-model="formData.category" placeholder="如：功能需求、缺陷修复" />
+          <el-select v-model="formData.category" placeholder="请选择分类" clearable>
+            <el-option label="通用需求" value="general" />
+            <el-option label="差异化需求" value="differential" />
+          </el-select>
         </el-form-item>
         <el-form-item label="来源">
-          <el-input v-model="formData.source" placeholder="如：用户反馈、产品经理" />
+          <el-select v-model="formData.source" placeholder="请选择来源" clearable>
+            <el-option label="业务需求" value="business" />
+            <el-option label="技术需求" value="tech" />
+            <el-option label="合规要求" value="regulatory" />
+          </el-select>
         </el-form-item>
         <el-form-item label="关联里程碑">
           <el-input-number v-model="formData.milestoneId" :min="1" :max="999999" placeholder="里程碑ID" controls-position="right" style="width: 100%" />

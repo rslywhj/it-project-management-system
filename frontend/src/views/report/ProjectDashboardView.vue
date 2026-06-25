@@ -1,5 +1,10 @@
 <template>
   <div class="project-dashboard" v-loading="loading">
+    <el-empty v-if="!hasProject" description="请先选择一个项目">
+      <el-button type="primary" @click="$router.push('/project/list')">选择项目</el-button>
+    </el-empty>
+
+    <template v-else>
     <!-- 统计卡片 -->
     <el-row :gutter="16" style="margin-bottom: 16px">
       <el-col :span="6">
@@ -118,6 +123,7 @@
       </el-timeline>
       <el-empty v-else description="暂无活动记录" :image-size="60" />
     </el-card>
+    </template>
   </div>
 </template>
 
@@ -129,6 +135,7 @@ import type { ProjectDashboard, BurndownData } from '@/types/report'
 
 const props = defineProps<{ projectId?: number }>()
 
+const hasProject = computed(() => !!props.projectId && props.projectId > 0)
 const loading = ref(false)
 const stats = reactive<ProjectDashboard>({
   projectId: 0,
@@ -194,6 +201,7 @@ function initCharts() {
 }
 
 async function refreshBurndown() {
+  if (!props.projectId) return
   try {
     const data = await getBurndownData(props.projectId)
     renderBurndown(data)

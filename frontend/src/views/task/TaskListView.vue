@@ -257,6 +257,7 @@ async function loadData() {
 }
 
 async function loadWbs() {
+  if (!props.projectId) return
   wbsLoading.value = true
   try {
     const data = await getWbsTree(props.projectId)

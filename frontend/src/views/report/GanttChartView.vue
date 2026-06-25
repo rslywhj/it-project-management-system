@@ -80,6 +80,7 @@ import type { GanttTask } from '@/types/report'
 
 const props = defineProps<{ projectId?: number }>()
 
+const hasProject = computed(() => !!props.projectId && props.projectId > 0)
 const loading = ref(false)
 const ganttLib = ref<'vue-ganttastic' | 'dhtmlx-gantt'>('vue-ganttastic')
 const tasks = ref<GanttTask[]>([])

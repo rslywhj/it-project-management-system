@@ -1,5 +1,10 @@
 <template>
   <div class="knowledge-list">
+    <el-empty v-if="!hasProject" description="请先选择一个项目">
+      <el-button type="primary" @click="$router.push('/project/list')">选择项目</el-button>
+    </el-empty>
+
+    <template v-else>
     <el-row :gutter="16">
       <!-- 左侧分类树 -->
       <el-col :span="5">
@@ -133,6 +138,7 @@
         </div>
       </div>
     </el-drawer>
+    </template>
   </div>
 </template>
 
@@ -202,6 +208,7 @@ async function loadCategories() {
 }
 
 async function loadArticles() {
+  if (!props.projectId) return
   loading.value = true
   try {
     const data = await getArticleList(props.projectId, {
@@ -224,11 +231,12 @@ function handleCategoryClick(data: KnowledgeCategory) {
 }
 
 function handleCreateCategory() {
+  if (!props.projectId) return
   ElMessageBox.prompt('请输入分类名称', '新建分类', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
   }).then(async ({ value }) => {
-    await createCategory(props.projectId, { name: value })
+    await createCategory(props.projectId!, { name: value })
     ElMessage.success('分类创建成功')
     loadCategories()
   }).catch(() => {})
@@ -265,13 +273,17 @@ async function handlePublish() {
 async function doSave() {
   const valid = await articleFormRef.value?.validate().catch(() => false)
   if (!valid) return
+  if (!isEditArticle.value && !props.projectId) {
+    ElMessage.warning('请先选择一个项目')
+    return
+  }
   articleSubmitLoading.value = true
   try {
     if (isEditArticle.value && editingArticleId.value) {
       await updateArticle(editingArticleId.value, articleFormData)
       ElMessage.success('更新成功')
     } else {
-      await createArticle(props.projectId, articleFormData)
+      await createArticle(props.projectId!, articleFormData)
       ElMessage.success('创建成功')
     }
     editorVisible.value = false

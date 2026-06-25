@@ -115,6 +115,7 @@ import type { Issue, IssueCreateRequest } from '@/types/risk'
 
 const props = defineProps<{ projectId?: number }>()
 
+const hasProject = computed(() => !!props.projectId && props.projectId > 0)
 const loading = ref(false)
 const issueList = ref<Issue[]>([])
 const total = ref(0)
@@ -171,13 +172,17 @@ function handleEdit(row: Issue) {
 async function handleSubmit() {
   const valid = await formRef.value?.validate().catch(() => false)
   if (!valid) return
+  if (!isEdit.value && !props.projectId) {
+    ElMessage.warning('请先选择一个项目')
+    return
+  }
   submitLoading.value = true
   try {
     if (isEdit.value && editingId.value) {
       await updateIssue(editingId.value, formData)
       ElMessage.success('更新成功')
     } else {
-      await createIssue(props.projectId, formData)
+      await createIssue(props.projectId!, formData)
       ElMessage.success('创建成功')
     }
     dialogVisible.value = false

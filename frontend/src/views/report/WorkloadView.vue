@@ -61,13 +61,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import * as echarts from 'echarts'
 import { getWorkloadData } from '@/api/report'
 import type { WorkloadData } from '@/types/report'
 
 const props = defineProps<{ projectId?: number }>()
 
+const hasProject = computed(() => !!props.projectId && props.projectId > 0)
 const loading = ref(false)
 const workloadList = ref<WorkloadData[]>([])
 const taskDistChartRef = ref<HTMLElement | null>(null)

@@ -87,6 +87,7 @@ import type { PromotionDashboard } from '@/types/promotion'
 
 const props = defineProps<{ projectId?: number }>()
 
+const hasProject = computed(() => !!props.projectId && props.projectId > 0)
 const loading = ref(false)
 const dashboard = reactive<PromotionDashboard>({
   totalUnits: 0,
@@ -108,6 +109,7 @@ function statusLabel(s: string) { return statusLabelMap[s] ?? s }
 function statusType(s: string): 'info' | 'warning' | 'success' | 'danger' { return statusTypeMap[s] ?? 'info' }
 
 async function loadDashboard() {
+  if (!props.projectId) return
   loading.value = true
   try {
     const data = await getPromotionDashboard(props.projectId)

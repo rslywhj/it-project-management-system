@@ -149,6 +149,7 @@ import RequirementDetail from './components/RequirementDetail.vue'
 
 const props = defineProps<{ projectId?: number }>()
 
+const hasProject = computed(() => !!props.projectId && props.projectId > 0)
 const loading = ref(false)
 const unitList = ref<PromotionUnit[]>([])
 const total = ref(0)
@@ -242,13 +243,17 @@ function handleDateChange(val: [string, string] | null) {
 async function handleSubmit() {
   const valid = await formRef.value?.validate().catch(() => false)
   if (!valid) return
+  if (!isEdit.value && !props.projectId) {
+    ElMessage.warning('请先选择一个项目')
+    return
+  }
   submitLoading.value = true
   try {
     if (isEdit.value && editingId.value) {
       await updatePromotionUnit(editingId.value, formData)
       ElMessage.success('更新成功')
     } else {
-      await createPromotionUnit(props.projectId, formData)
+      await createPromotionUnit(props.projectId!, formData)
       ElMessage.success('创建成功')
     }
     dialogVisible.value = false
@@ -259,6 +264,10 @@ async function handleSubmit() {
 }
 
 async function handleBatchSubmit() {
+  if (!props.projectId) {
+    ElMessage.warning('请先选择一个项目')
+    return
+  }
   const lines = batchText.value.trim().split('\n').filter((l) => l.trim())
   if (lines.length === 0) {
     ElMessage.warning('请输入至少一个单位')

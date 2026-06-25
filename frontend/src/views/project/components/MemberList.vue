@@ -32,16 +32,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getProjectMembers, removeProjectMember } from '@/api/project'
 import type { ProjectMember } from '@/types/project'
 
 const props = defineProps<{ projectId?: number }>()
 
+const hasProject = computed(() => !!props.projectId && props.projectId > 0)
 const members = ref<ProjectMember[]>([])
 
 async function loadMembers() {
+  if (!props.projectId) return
   try {
     const data = await getProjectMembers(props.projectId)
     members.value = data
@@ -55,6 +57,7 @@ function handleAdd() {
 }
 
 async function handleRemove(row: ProjectMember) {
+  if (!props.projectId) return
   try {
     await ElMessageBox.confirm(`确定移除成员「${row.realName}」？`, '提示', {
       type: 'warning',

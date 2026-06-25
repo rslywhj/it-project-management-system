@@ -86,6 +86,7 @@ import TestReportDetail from './components/TestReportDetail.vue'
 
 const props = defineProps<{ projectId?: number }>()
 
+const hasProject = computed(() => !!props.projectId && props.projectId > 0)
 const loading = ref(false)
 const planList = ref<TestPlan[]>([])
 const total = ref(0)
@@ -147,13 +148,17 @@ function handleDateChange(val: [string, string] | null) {
 async function handleSubmit() {
   const valid = await formRef.value?.validate().catch(() => false)
   if (!valid) return
+  if (!isEdit.value && !props.projectId) {
+    ElMessage.warning('请先选择一个项目')
+    return
+  }
   submitLoading.value = true
   try {
     if (isEdit.value && editingId.value) {
       await updateTestPlan(editingId.value, formData)
       ElMessage.success('更新成功')
     } else {
-      await createTestPlan(props.projectId, formData)
+      await createTestPlan(props.projectId!, formData)
       ElMessage.success('创建成功')
     }
     dialogVisible.value = false

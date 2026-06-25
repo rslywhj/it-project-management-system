@@ -20,6 +20,9 @@ public class WorkLogVO {
     @Schema(description = "用户ID")
     private Long userId;
 
+    @Schema(description = "用户名")
+    private String userName;
+
     @Schema(description = "任务ID")
     private Long taskId;
 

@@ -83,30 +83,30 @@ export function getExecutionList(planId: number, params?: PageParams) {
 
 /** 创建缺陷 */
 export function createDefect(projectId: number, data: DefectCreateRequest) {
-  return service.post<any, Defect>(`/projects/${projectId}/defects`, data)
+  return service.post<any, Defect>(`/projects/${projectId}/bugs`, data)
 }
 
 /** 获取缺陷列表 */
 export function getDefectList(projectId: number, params: PageParams & { status?: string; priority?: string; severity?: string }) {
-  return service.get<any, PageResult<Defect>>(`/projects/${projectId}/defects`, { params })
+  return service.get<any, PageResult<Defect>>(`/projects/${projectId}/bugs`, { params })
 }
 
 /** 获取缺陷详情 */
 export function getDefectDetail(id: number) {
-  return service.get<any, Defect>(`/defects/${id}`)
+  return service.get<any, Defect>(`/bugs/${id}`)
 }
 
 /** 更新缺陷 */
 export function updateDefect(id: number, data: Partial<Defect>) {
-  return service.put<any, Defect>(`/defects/${id}`, data)
+  return service.put<any, Defect>(`/bugs/${id}`, data)
 }
 
 /** 关闭缺陷 */
 export function closeDefect(id: number, resolution?: string) {
-  return service.put<any, Defect>(`/defects/${id}/close`, { resolution })
+  return service.put<any, Defect>(`/bugs/${id}/status`, { resolution })
 }
 
 /** 删除缺陷 */
 export function deleteDefect(id: number) {
-  return service.delete<any, void>(`/defects/${id}`)
+  return service.delete<any, void>(`/bugs/${id}`)
 }

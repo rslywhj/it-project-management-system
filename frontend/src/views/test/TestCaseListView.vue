@@ -1,5 +1,10 @@
 <template>
   <div class="test-case-list">
+    <el-empty v-if="!hasProject" description="请先选择一个项目">
+      <el-button type="primary" @click="$router.push('/project/list')">选择项目</el-button>
+    </el-empty>
+
+    <template v-else>
     <div class="toolbar">
       <div class="toolbar-left">
         <el-input v-model="queryParams.keyword" placeholder="搜索用例标题" prefix-icon="Search" clearable style="width: 220px" @clear="handleSearch" @keyup.enter="handleSearch" />
@@ -79,16 +84,17 @@
         <el-button type="primary" :loading="submitLoading" @click="handleSubmit">确定</el-button>
       </template>
     </el-dialog>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { getTestCaseList, createTestCase, updateTestCase, deleteTestCase } from '@/api/test'
 import type { TestCase, TestCaseCreateRequest } from '@/types/test'
 
-const props = defineProps<{ projectId: number }>()
+const props = defineProps<{ projectId?: number }>()
 
 const loading = ref(false)
 const caseList = ref<TestCase[]>([])
@@ -116,6 +122,7 @@ function statusLabel(s: string) { return statusLabelMap[s] ?? s }
 function statusType(s: string): 'info' | 'warning' | 'success' | 'danger' { return statusTypeMap[s] ?? 'info' }
 
 async function loadData() {
+  if (!props.projectId) return
   loading.value = true
   try {
     const data = await getTestCaseList(props.projectId, queryParams)

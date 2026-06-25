@@ -1,5 +1,9 @@
 <template>
   <div class="resource-list">
+    <el-empty v-if="!hasProject" description="请先选择一个项目">
+      <el-button type="primary" @click="$router.push('/project/list')">选择项目</el-button>
+    </el-empty>
+    <template v-else>
     <el-tabs v-model="activeTab">
       <!-- 资源分配 -->
       <el-tab-pane label="资源分配" name="allocation">
@@ -126,16 +130,18 @@
         <el-button type="primary" :loading="tsSubmitLoading" @click="handleTsSubmit">确定</el-button>
       </template>
     </el-dialog>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { getAllocationList, createAllocation, deleteAllocation, getResourceUtilization, getTimesheetList, createTimesheet, submitTimesheet, approveTimesheet, deleteTimesheet } from '@/api/resource'
 import type { ResourceAllocation, ResourceAllocationCreateRequest, Timesheet, TimesheetCreateRequest, ResourceUtilization } from '@/types/resource'
 
-const props = defineProps<{ projectId: number }>()
+const props = defineProps<{ projectId?: number }>()
+const hasProject = computed(() => !!props.projectId && props.projectId > 0)
 
 const activeTab = ref('allocation')
 
@@ -180,6 +186,7 @@ function tsStatusLabel(s: string) { return tsStatusMap[s] ?? s }
 function tsStatusType(s: string): 'info' | 'warning' | 'success' | 'danger' { return tsStatusTypeMap[s] ?? 'info' }
 
 async function loadAllocations() {
+  if (!props.projectId) return
   allocationLoading.value = true
   try {
     const data = await getAllocationList(props.projectId)
@@ -188,6 +195,7 @@ async function loadAllocations() {
 }
 
 async function loadUtilization() {
+  if (!props.projectId) return
   utilLoading.value = true
   try {
     const data = await getResourceUtilization(props.projectId)
@@ -196,6 +204,7 @@ async function loadUtilization() {
 }
 
 async function loadTimesheets() {
+  if (!props.projectId) return
   timesheetLoading.value = true
   try {
     const startDate = timesheetDateRange.value?.[0]
@@ -219,9 +228,10 @@ function handleAllocDateChange(val: [string, string] | null) {
 async function handleAllocSubmit() {
   const valid = await allocFormRef.value?.validate().catch(() => false)
   if (!valid) return
+  if (!props.projectId) { ElMessage.warning('请先选择一个项目'); return }
   allocSubmitLoading.value = true
   try {
-    await createAllocation(props.projectId, allocFormData)
+    await createAllocation(props.projectId!, allocFormData)
     ElMessage.success('分配成功')
     allocDialogVisible.value = false
     loadAllocations()
@@ -247,9 +257,10 @@ function handleCreateTimesheet() {
 async function handleTsSubmit() {
   const valid = await tsFormRef.value?.validate().catch(() => false)
   if (!valid) return
+  if (!props.projectId) { ElMessage.warning('请先选择一个项目'); return }
   tsSubmitLoading.value = true
   try {
-    await createTimesheet(props.projectId, tsFormData)
+    await createTimesheet(props.projectId!, tsFormData)
     ElMessage.success('记录成功')
     tsDialogVisible.value = false
     loadTimesheets()

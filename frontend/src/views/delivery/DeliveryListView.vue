@@ -1,5 +1,9 @@
 <template>
   <div class="delivery-list">
+    <el-empty v-if="!hasProject" description="请先选择一个项目">
+      <el-button type="primary" @click="$router.push('/project/list')">选择项目</el-button>
+    </el-empty>
+    <template v-else>
     <div class="toolbar">
       <div class="toolbar-left">
         <el-input v-model="queryParams.keyword" placeholder="搜索交付物名称" prefix-icon="Search" clearable style="width: 220px" @clear="handleSearch" @keyup.enter="handleSearch" />
@@ -97,18 +101,20 @@
 
     <!-- 交付物详情抽屉 -->
     <DeliveryDetailDrawer v-model="detailDrawerVisible" :delivery-id="detailDeliveryId" />
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { getDeliveryList, createDelivery, deleteDelivery, submitDelivery, reviewDelivery } from '@/api/delivery'
 import type { Delivery, DeliveryCreateRequest, DeliveryReviewRequest } from '@/types/delivery'
 import { DELIVERY_TYPE_LABEL, DELIVERY_STATUS_LABEL, DELIVERY_STATUS_TYPE, labelFrom, tagType } from '@/constants'
 import DeliveryDetailDrawer from './components/DeliveryDetailDrawer.vue'
 
-const props = defineProps<{ projectId: number }>()
+const props = defineProps<{ projectId?: number }>()
+const hasProject = computed(() => !!props.projectId && props.projectId > 0)
 
 const loading = ref(false)
 const deliveryList = ref<Delivery[]>([])
@@ -122,6 +128,7 @@ const dialogVisible = ref(false)
 const detailDrawerVisible = ref(false)
 const detailDeliveryId = ref<number | null>(null)
 const dialogTitle = ref('新建交付物')
+const isEdit = ref(false)
 const submitLoading = ref(false)
 const formRef = ref<FormInstance>()
 const formData = reactive<DeliveryCreateRequest>({ name: '', type: 'document', description: '' })
@@ -137,6 +144,7 @@ function statusLabel(s: string) { return labelFrom(DELIVERY_STATUS_LABEL, s) }
 function statusType(s: string) { return tagType(DELIVERY_STATUS_TYPE, s) }
 
 async function loadData() {
+  if (!props.projectId) return
   loading.value = true
   try {
     const data = await getDeliveryList(props.projectId, queryParams)
@@ -149,6 +157,7 @@ function handleSearch() { queryParams.page = 1; loadData() }
 
 function handleCreate() {
   dialogTitle.value = '新建交付物'
+  isEdit.value = false
   Object.assign(formData, { name: '', type: 'document', description: '' })
   dialogVisible.value = true
 }
@@ -156,9 +165,10 @@ function handleCreate() {
 async function handleSubmit() {
   const valid = await formRef.value?.validate().catch(() => false)
   if (!valid) return
+  if (!isEdit.value && !props.projectId) { ElMessage.warning('请先选择一个项目'); return }
   submitLoading.value = true
   try {
-    await createDelivery(props.projectId, formData)
+    await createDelivery(props.projectId!, formData)
     ElMessage.success('创建成功')
     dialogVisible.value = false
     loadData()
@@ -198,6 +208,7 @@ function handleViewDetail(row: Delivery) {
 
 function handleNewVersion(row: Delivery) {
   dialogTitle.value = `创建新版本（当前 v${row.version}）`
+  isEdit.value = false
   Object.assign(formData, { name: row.name, type: row.type, description: row.description })
   dialogVisible.value = true
 }

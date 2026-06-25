@@ -1,5 +1,10 @@
 <template>
   <div class="promotion-dashboard" v-loading="loading">
+    <el-empty v-if="!hasProject" description="请先选择一个项目">
+      <el-button type="primary" @click="$router.push('/project/list')">选择项目</el-button>
+    </el-empty>
+
+    <template v-else>
     <!-- 统计卡片 -->
     <el-row :gutter="16" style="margin-bottom: 16px">
       <el-col :span="4">
@@ -71,15 +76,16 @@
         </el-table-column>
       </el-table>
     </el-card>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { getPromotionDashboard } from '@/api/promotion'
 import type { PromotionDashboard } from '@/types/promotion'
 
-const props = defineProps<{ projectId: number }>()
+const props = defineProps<{ projectId?: number }>()
 
 const loading = ref(false)
 const dashboard = reactive<PromotionDashboard>({

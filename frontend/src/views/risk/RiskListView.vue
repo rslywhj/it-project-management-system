@@ -1,5 +1,9 @@
 <template>
   <div class="risk-list">
+    <el-empty v-if="!hasProject" description="请先选择一个项目">
+      <el-button type="primary" @click="$router.push('/project/list')">选择项目</el-button>
+    </el-empty>
+    <template v-else>
     <div class="toolbar">
       <div class="toolbar-left">
         <el-input v-model="queryParams.keyword" placeholder="搜索风险标题" prefix-icon="Search" clearable style="width: 200px" @clear="handleSearch" @keyup.enter="handleSearch" />
@@ -115,6 +119,7 @@
         <el-button type="primary" :loading="submitLoading" @click="handleSubmit">确定</el-button>
       </template>
     </el-dialog>
+    </template>
   </div>
 </template>
 
@@ -124,7 +129,8 @@ import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'elem
 import { getRiskList, createRisk, updateRisk, deleteRisk, closeRisk } from '@/api/risk'
 import type { Risk, RiskCreateRequest } from '@/types/risk'
 
-const props = defineProps<{ projectId: number }>()
+const props = defineProps<{ projectId?: number }>()
+const hasProject = computed(() => !!props.projectId && props.projectId > 0)
 
 const loading = ref(false)
 const riskList = ref<Risk[]>([])
@@ -161,6 +167,7 @@ const riskStats = computed(() => [
 ])
 
 async function loadData() {
+  if (!props.projectId) return
   loading.value = true
   try {
     const data = await getRiskList(props.projectId, queryParams)
@@ -198,7 +205,8 @@ async function handleSubmit() {
       await updateRisk(editingId.value, formData)
       ElMessage.success('更新成功')
     } else {
-      await createRisk(props.projectId, formData)
+      if (!props.projectId) { ElMessage.warning('请先选择一个项目'); return }
+      await createRisk(props.projectId!, formData)
       ElMessage.success('创建成功')
     }
     dialogVisible.value = false

@@ -1,5 +1,9 @@
 <template>
   <div class="milestone-list">
+    <el-empty v-if="!hasProject" description="请先选择一个项目">
+      <el-button type="primary" @click="$router.push('/project/list')">选择项目</el-button>
+    </el-empty>
+    <template v-else>
     <div class="toolbar">
       <div class="toolbar-left">
         <el-select v-model="queryParams.status" placeholder="状态" clearable style="width: 120px" @change="handleSearch">
@@ -106,11 +110,12 @@
         <el-button type="primary" :loading="submitLoading" @click="handleSubmit">确定</el-button>
       </template>
     </el-dialog>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import {
   getMilestoneList,
@@ -120,7 +125,8 @@ import {
 } from '@/api/milestone'
 import type { Milestone, MilestoneCreateRequest, MilestoneStatus, MilestoneUpdateRequest } from '@/types/milestone'
 
-const props = defineProps<{ projectId: number }>()
+const props = defineProps<{ projectId?: number }>()
+const hasProject = computed(() => !!props.projectId && props.projectId > 0)
 
 const loading = ref(false)
 const milestoneList = ref<Milestone[]>([])
@@ -174,6 +180,7 @@ function timelineType(s: string): 'info' | 'warning' | 'success' | 'danger' {
 }
 
 async function loadData() {
+  if (!props.projectId) return
   loading.value = true
   try {
     const data = await getMilestoneList(props.projectId, queryParams)
@@ -233,6 +240,10 @@ async function handleSubmit() {
       await updateMilestone(editingId.value, updateData)
       ElMessage.success('更新成功')
     } else {
+      if (!props.projectId) {
+        ElMessage.warning('请先选择一个项目')
+        return
+      }
       await createMilestone(props.projectId, formData)
       ElMessage.success('创建成功')
     }

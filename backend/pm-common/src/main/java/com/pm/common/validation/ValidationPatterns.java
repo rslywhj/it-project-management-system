@@ -17,8 +17,8 @@ public final class ValidationPatterns {
     /** 需求分类：general / differential */
     public static final String REQUIREMENT_CATEGORY = "^(general|differential)$";
 
-    /** 需求状态：reviewing / approved / scheduled / done / rejected / draft */
-    public static final String REQUIREMENT_STATUS = "^(reviewing|approved|scheduled|done|rejected|draft)$";
+    /** 需求状态：draft / reviewing / approved / rejected / scheduled / in_progress / done */
+    public static final String REQUIREMENT_STATUS = "^(draft|reviewing|approved|rejected|scheduled|in_progress|done)$";
 
     /** 交付物审核动作：approve / reject */
     public static final String DELIVERY_ACTION = "^(approve|reject)$";

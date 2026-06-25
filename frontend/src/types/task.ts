@@ -1,8 +1,8 @@
 /** 任务状态 */
 export type TaskStatus = 'todo' | 'in_progress' | 'done'
 
-/** 任务类型 */
-export type TaskType = 'dev' | 'test' | 'design' | 'research' | 'deploy' | 'other'
+/** 任务类型（对齐后端：dev/test/deploy/training/design/review） */
+export type TaskType = 'dev' | 'test' | 'deploy' | 'training' | 'design' | 'review'
 
 /** 任务信息（对齐后端 TaskVO） */
 export interface Task {
@@ -32,10 +32,11 @@ export interface Task {
 export interface TaskCreateRequest {
   title: string
   description?: string
+  parentTaskId?: number
+  requirementId?: number
   type?: TaskType
   priority?: string
   assignedTo?: number
-  requirementId?: number
   plannedStart?: string
   plannedEnd?: string
 }

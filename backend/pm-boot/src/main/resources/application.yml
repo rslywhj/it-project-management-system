@@ -52,7 +52,7 @@ jwt:
 
 # CORS — allowed origins (comma-separated, production must set via CORS_ALLOWED_ORIGINS env var)
 cors:
-  allowed-origins: ${CORS_ALLOWED_ORIGINS:https://pm.dougge.top,http://111.229.200.159,http://localhost:5173}
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:https://pm.dougge.top,http://111.229.200.159,http://111.229.200.159:3000,http://localhost:5173}
 
 # Logging
 logging:

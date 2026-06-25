@@ -1,7 +1,7 @@
 package com.pm.project.controller;
 
-import com.pm.project.domain.ProjectMember;
 import com.pm.project.dto.ProjectCreateRequest;
+import com.pm.project.dto.ProjectMemberVO;
 import com.pm.project.dto.ProjectUpdateRequest;
 import com.pm.project.dto.ProjectVO;
 import com.pm.project.service.ProjectService;
@@ -71,7 +71,7 @@ public class ProjectController {
 
     @GetMapping("/{projectId}/members")
     @Operation(summary = "项目成员列表")
-    public Result<List<ProjectMember>> listMembers(@PathVariable Long projectId) {
+    public Result<List<ProjectMemberVO>> listMembers(@PathVariable Long projectId) {
         return Result.ok(projectService.listMembers(projectId));
     }
 

@@ -63,6 +63,12 @@ public class Task extends BaseEntity {
     @Schema(description = "完成百分比")
     private BigDecimal completionRate;
 
+    @Schema(description = "预估工时（小时）")
+    private BigDecimal estimatedHours;
+
+    @Schema(description = "实际工时（小时）")
+    private BigDecimal actualHours;
+
     @Schema(description = "WBS编码")
     private String wbsCode;
 

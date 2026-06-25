@@ -6,6 +6,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.math.BigDecimal;
+
 /**
  * 需求实体
  */
@@ -23,6 +25,9 @@ public class Requirement extends BaseEntity {
 
     @Schema(description = "需求描述")
     private String description;
+
+    @Schema(description = "验收标准")
+    private String acceptanceCriteria;
 
     @Schema(description = "优先级：critical/high/medium/low")
     private String priority;
@@ -42,6 +47,9 @@ public class Requirement extends BaseEntity {
     @Schema(description = "关联里程碑ID")
     private Long milestoneId;
 
-    @Schema(description = "关联推广单元ID")
-    private Long promotionUnitId;
+    @Schema(description = "预估工时（小时）")
+    private BigDecimal estimatedHours;
+
+    @Schema(description = "实际工时（小时）")
+    private BigDecimal actualHours;
 }

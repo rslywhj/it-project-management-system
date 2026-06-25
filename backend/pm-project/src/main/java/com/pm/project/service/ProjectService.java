@@ -7,9 +7,12 @@ import com.pm.common.exception.BusinessException;
 import com.pm.common.result.PageResult;
 import com.pm.common.result.ResultCode;
 import com.pm.common.util.UserContext;
+import com.pm.common.entity.SysUser;
+import com.pm.common.mapper.SysUserMapper;
 import com.pm.project.domain.Project;
 import com.pm.project.domain.ProjectMember;
 import com.pm.project.dto.ProjectCreateRequest;
+import com.pm.project.dto.ProjectMemberVO;
 import com.pm.project.dto.ProjectUpdateRequest;
 import com.pm.project.dto.ProjectVO;
 import com.pm.project.mapper.ProjectMapper;
@@ -30,6 +33,7 @@ public class ProjectService {
 
     private final ProjectMapper projectMapper;
     private final ProjectMemberMapper projectMemberMapper;
+    private final SysUserMapper sysUserMapper;
 
     /**
      * 创建项目
@@ -154,10 +158,24 @@ public class ProjectService {
     /**
      * 获取项目成员列表
      */
-    public List<ProjectMember> listMembers(Long projectId) {
-        return projectMemberMapper.selectList(
+    public List<ProjectMemberVO> listMembers(Long projectId) {
+        List<ProjectMember> members = projectMemberMapper.selectList(
                 new LambdaQueryWrapper<ProjectMember>()
                         .eq(ProjectMember::getProjectId, projectId));
+        return members.stream()
+                .map(this::toMemberVO)
+                .collect(Collectors.toList());
+    }
+
+    private ProjectMemberVO toMemberVO(ProjectMember member) {
+        ProjectMemberVO vo = new ProjectMemberVO();
+        BeanUtils.copyProperties(member, vo);
+        SysUser user = sysUserMapper.selectById(member.getUserId());
+        if (user != null) {
+            vo.setUsername(user.getUsername());
+            vo.setRealName(user.getRealName());
+        }
+        return vo;
     }
 
     private ProjectVO toVO(Project project, Integer memberCount) {

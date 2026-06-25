@@ -74,7 +74,7 @@ public class NotificationService {
             throw new BusinessException(ResultCode.FORBIDDEN);
         }
 
-        if (notification.getIsRead() == 0) {
+        if (notification.getIsRead() == null || notification.getIsRead() == 0) {
             notification.setIsRead(1);
             notification.setReadAt(LocalDateTime.now());
             notificationMapper.updateById(notification);

@@ -15,6 +15,6 @@ public interface SysNotificationMapper extends BaseMapper<SysNotification> {
     /**
      * 统计用户未读通知数量
      */
-    @Select("SELECT COUNT(*) FROM sys_notification WHERE user_id = #{userId} AND is_read = 0")
+    @Select("SELECT COUNT(*) FROM sys_notification WHERE user_id = #{userId} AND (is_read = 0 OR is_read IS NULL)")
     int countUnread(@Param("userId") Long userId);
 }

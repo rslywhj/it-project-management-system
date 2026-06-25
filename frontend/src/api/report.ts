@@ -18,5 +18,5 @@ export function getBurndownData(projectId: number) {
 
 /** 获取团队工时统计 */
 export function getWorkloadData(projectId: number) {
-  return service.get<any, WorkloadData[]>(`/projects/${projectId}/workload`)
+  return service.get<any, WorkloadData[]>(`/projects/${projectId}/resources/workload`)
 }

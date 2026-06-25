@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api")
@@ -94,6 +95,104 @@ public class ResourceController {
     public Result<Void> deleteWorkLog(@PathVariable Long workLogId) {
         resourceService.deleteWorkLog(workLogId);
         return Result.ok();
+    }
+
+    // ==================== 资源分配 ====================
+
+    @PostMapping("/projects/{projectId}/allocations")
+    @Operation(summary = "创建资源分配")
+    public Result<AllocationVO> createAllocation(@PathVariable Long projectId,
+                                                  @Valid @RequestBody AllocationRequest request) {
+        return Result.ok(resourceService.createAllocation(projectId, request));
+    }
+
+    @GetMapping("/projects/{projectId}/allocations")
+    @Operation(summary = "资源分配列表")
+    public Result<PageResult<AllocationVO>> listAllocations(
+            @PathVariable Long projectId,
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") int page,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") int size,
+            @Parameter(description = "用户ID") @RequestParam(required = false) Long userId,
+            @Parameter(description = "状态") @RequestParam(required = false) String status) {
+        return Result.ok(resourceService.listAllocations(projectId, page, size, userId, status));
+    }
+
+    @PutMapping("/allocations/{allocationId}")
+    @Operation(summary = "更新资源分配")
+    public Result<AllocationVO> updateAllocation(@PathVariable Long allocationId,
+                                                  @Valid @RequestBody AllocationRequest request) {
+        return Result.ok(resourceService.updateAllocation(allocationId, request));
+    }
+
+    @DeleteMapping("/allocations/{allocationId}")
+    @Operation(summary = "删除资源分配")
+    public Result<Void> deleteAllocation(@PathVariable Long allocationId) {
+        resourceService.deleteAllocation(allocationId);
+        return Result.ok();
+    }
+
+    // ==================== 工时记录（Timesheet） ====================
+
+    @PostMapping("/projects/{projectId}/timesheets")
+    @Operation(summary = "创建工时记录")
+    public Result<TimesheetVO> createTimesheet(@PathVariable Long projectId,
+                                                @Valid @RequestBody TimesheetRequest request) {
+        return Result.ok(resourceService.createTimesheet(projectId, request));
+    }
+
+    @GetMapping("/projects/{projectId}/timesheets")
+    @Operation(summary = "工时记录列表")
+    public Result<PageResult<TimesheetVO>> listTimesheets(
+            @PathVariable Long projectId,
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") int page,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") int size,
+            @Parameter(description = "用户ID") @RequestParam(required = false) Long userId,
+            @Parameter(description = "开始日期") @RequestParam(required = false) LocalDate startDate,
+            @Parameter(description = "结束日期") @RequestParam(required = false) LocalDate endDate,
+            @Parameter(description = "状态") @RequestParam(required = false) String status) {
+        return Result.ok(resourceService.listTimesheets(projectId, page, size, userId, startDate, endDate, status));
+    }
+
+    @PutMapping("/timesheets/{timesheetId}")
+    @Operation(summary = "更新工时记录")
+    public Result<TimesheetVO> updateTimesheet(@PathVariable Long timesheetId,
+                                                @Valid @RequestBody TimesheetRequest request) {
+        return Result.ok(resourceService.updateTimesheet(timesheetId, request));
+    }
+
+    @DeleteMapping("/timesheets/{timesheetId}")
+    @Operation(summary = "删除工时记录")
+    public Result<Void> deleteTimesheet(@PathVariable Long timesheetId) {
+        resourceService.deleteTimesheet(timesheetId);
+        return Result.ok();
+    }
+
+    @PutMapping("/timesheets/{timesheetId}/submit")
+    @Operation(summary = "提交工时记录")
+    public Result<TimesheetVO> submitTimesheet(@PathVariable Long timesheetId) {
+        return Result.ok(resourceService.submitTimesheet(timesheetId));
+    }
+
+    @PutMapping("/timesheets/{timesheetId}/approve")
+    @Operation(summary = "审批工时记录")
+    public Result<TimesheetVO> approveTimesheet(@PathVariable Long timesheetId) {
+        return Result.ok(resourceService.approveTimesheet(timesheetId));
+    }
+
+    @PutMapping("/timesheets/{timesheetId}/reject")
+    @Operation(summary = "驳回工时记录")
+    public Result<TimesheetVO> rejectTimesheet(@PathVariable Long timesheetId,
+                                                @RequestBody(required = false) java.util.Map<String, String> body) {
+        String reason = body != null ? body.get("reason") : null;
+        return Result.ok(resourceService.rejectTimesheet(timesheetId, reason));
+    }
+
+    // ==================== 资源利用率 ====================
+
+    @GetMapping("/projects/{projectId}/resource-utilization")
+    @Operation(summary = "资源利用率")
+    public Result<List<ResourceUtilizationVO>> getResourceUtilization(@PathVariable Long projectId) {
+        return Result.ok(resourceService.getResourceUtilization(projectId));
     }
 
     // ==================== 资源负载分析 ====================

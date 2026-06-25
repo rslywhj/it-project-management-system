@@ -6,10 +6,16 @@ import com.pm.auth.annotation.RequirePermission;
 import com.pm.common.exception.BusinessException;
 import com.pm.common.result.PageResult;
 import com.pm.common.util.UserContext;
+import com.pm.common.entity.SysUser;
+import com.pm.common.mapper.SysUserMapper;
 import com.pm.resource.domain.Resource;
+import com.pm.resource.domain.ResourceAllocation;
+import com.pm.resource.domain.Timesheet;
 import com.pm.resource.domain.WorkLog;
 import com.pm.resource.dto.*;
+import com.pm.resource.mapper.ResourceAllocationMapper;
 import com.pm.resource.mapper.ResourceMapper;
+import com.pm.resource.mapper.TimesheetMapper;
 import com.pm.resource.mapper.WorkLogMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +28,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +41,9 @@ public class ResourceService {
 
     private final ResourceMapper resourceMapper;
     private final WorkLogMapper workLogMapper;
+    private final ResourceAllocationMapper allocationMapper;
+    private final TimesheetMapper timesheetMapper;
+    private final SysUserMapper sysUserMapper;
 
     // ==================== 资源池管理 ====================
 
@@ -159,6 +169,214 @@ public class ResourceService {
         workLogMapper.deleteById(workLogId);
     }
 
+    // ==================== 资源分配管理 ====================
+
+    @Transactional
+    @RequirePermission("resource:create")
+    public AllocationVO createAllocation(Long projectId, AllocationRequest request) {
+        ResourceAllocation allocation = new ResourceAllocation();
+        BeanUtils.copyProperties(request, allocation);
+        allocation.setProjectId(projectId);
+        allocation.setStatus("planned");
+        allocationMapper.insert(allocation);
+        return toAllocationVO(allocation);
+    }
+
+    @RequirePermission("resource:view")
+    public PageResult<AllocationVO> listAllocations(Long projectId, int page, int size,
+                                                     Long userId, String status) {
+        LambdaQueryWrapper<ResourceAllocation> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ResourceAllocation::getProjectId, projectId)
+                .eq(userId != null, ResourceAllocation::getUserId, userId)
+                .eq(StringUtils.hasText(status), ResourceAllocation::getStatus, status)
+                .orderByDesc(ResourceAllocation::getCreatedAt);
+
+        Page<ResourceAllocation> result = allocationMapper.selectPage(new Page<>(page, size), wrapper);
+        List<AllocationVO> voList = result.getRecords().stream()
+                .map(this::toAllocationVO)
+                .collect(Collectors.toList());
+        return PageResult.of(voList, result.getTotal(), page, size);
+    }
+
+    @Transactional
+    @RequirePermission("resource:edit")
+    public AllocationVO updateAllocation(Long allocationId, AllocationRequest request) {
+        ResourceAllocation allocation = allocationMapper.selectById(allocationId);
+        if (allocation == null) {
+            throw new BusinessException(1103, "资源分配不存在");
+        }
+        BeanUtils.copyProperties(request, allocation, "id", "projectId", "status",
+                "createdAt", "createdBy", "isDeleted");
+        allocationMapper.updateById(allocation);
+        return toAllocationVO(allocation);
+    }
+
+    @Transactional
+    @RequirePermission("resource:delete")
+    public void deleteAllocation(Long allocationId) {
+        allocationMapper.deleteById(allocationId);
+    }
+
+    // ==================== 工时记录（Timesheet） ====================
+
+    @Transactional
+    @RequirePermission("resource:create")
+    public TimesheetVO createTimesheet(Long projectId, TimesheetRequest request) {
+        Timesheet timesheet = new Timesheet();
+        BeanUtils.copyProperties(request, timesheet);
+        timesheet.setProjectId(projectId);
+        timesheet.setUserId(UserContext.getUserId());
+        timesheet.setStatus("draft");
+        timesheetMapper.insert(timesheet);
+        return toTimesheetVO(timesheet);
+    }
+
+    @RequirePermission("resource:view")
+    public PageResult<TimesheetVO> listTimesheets(Long projectId, int page, int size,
+                                                   Long userId, LocalDate startDate, LocalDate endDate, String status) {
+        LambdaQueryWrapper<Timesheet> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Timesheet::getProjectId, projectId)
+                .eq(userId != null, Timesheet::getUserId, userId)
+                .ge(startDate != null, Timesheet::getWorkDate, startDate)
+                .le(endDate != null, Timesheet::getWorkDate, endDate)
+                .eq(StringUtils.hasText(status), Timesheet::getStatus, status)
+                .orderByDesc(Timesheet::getWorkDate);
+
+        Page<Timesheet> result = timesheetMapper.selectPage(new Page<>(page, size), wrapper);
+        List<TimesheetVO> voList = result.getRecords().stream()
+                .map(this::toTimesheetVO)
+                .collect(Collectors.toList());
+        return PageResult.of(voList, result.getTotal(), page, size);
+    }
+
+    @Transactional
+    @RequirePermission("resource:edit")
+    public TimesheetVO updateTimesheet(Long timesheetId, TimesheetRequest request) {
+        Timesheet timesheet = timesheetMapper.selectById(timesheetId);
+        if (timesheet == null) {
+            throw new BusinessException(1104, "工时记录不存在");
+        }
+        if (!"draft".equals(timesheet.getStatus()) && !"rejected".equals(timesheet.getStatus())) {
+            throw new BusinessException(1105, "只有草稿或被驳回的记录可以编辑");
+        }
+        BeanUtils.copyProperties(request, timesheet, "id", "projectId", "userId", "status",
+                "approvedBy", "approvedAt", "rejectReason", "createdAt", "createdBy", "isDeleted");
+        timesheetMapper.updateById(timesheet);
+        return toTimesheetVO(timesheet);
+    }
+
+    @Transactional
+    @RequirePermission("resource:delete")
+    public void deleteTimesheet(Long timesheetId) {
+        Timesheet timesheet = timesheetMapper.selectById(timesheetId);
+        if (timesheet == null) {
+            throw new BusinessException(1104, "工时记录不存在");
+        }
+        if (!"draft".equals(timesheet.getStatus()) && !"rejected".equals(timesheet.getStatus())) {
+            throw new BusinessException(1105, "只有草稿或被驳回的记录可以删除");
+        }
+        timesheetMapper.deleteById(timesheetId);
+    }
+
+    @Transactional
+    @RequirePermission("resource:edit")
+    public TimesheetVO submitTimesheet(Long timesheetId) {
+        Timesheet timesheet = timesheetMapper.selectById(timesheetId);
+        if (timesheet == null) {
+            throw new BusinessException(1104, "工时记录不存在");
+        }
+        if (!"draft".equals(timesheet.getStatus()) && !"rejected".equals(timesheet.getStatus())) {
+            throw new BusinessException(1105, "只有草稿或被驳回的记录可以提交");
+        }
+        timesheet.setStatus("submitted");
+        timesheetMapper.updateById(timesheet);
+        return toTimesheetVO(timesheet);
+    }
+
+    @Transactional
+    @RequirePermission("resource:manage")
+    public TimesheetVO approveTimesheet(Long timesheetId) {
+        Timesheet timesheet = timesheetMapper.selectById(timesheetId);
+        if (timesheet == null) {
+            throw new BusinessException(1104, "工时记录不存在");
+        }
+        if (!"submitted".equals(timesheet.getStatus())) {
+            throw new BusinessException(1106, "只有已提交的记录可以审批");
+        }
+        timesheet.setStatus("approved");
+        timesheet.setApprovedBy(UserContext.getUserId());
+        timesheet.setApprovedAt(LocalDateTime.now());
+        timesheetMapper.updateById(timesheet);
+        return toTimesheetVO(timesheet);
+    }
+
+    @Transactional
+    @RequirePermission("resource:manage")
+    public TimesheetVO rejectTimesheet(Long timesheetId, String reason) {
+        Timesheet timesheet = timesheetMapper.selectById(timesheetId);
+        if (timesheet == null) {
+            throw new BusinessException(1104, "工时记录不存在");
+        }
+        if (!"submitted".equals(timesheet.getStatus())) {
+            throw new BusinessException(1106, "只有已提交的记录可以驳回");
+        }
+        timesheet.setStatus("rejected");
+        timesheet.setApprovedBy(UserContext.getUserId());
+        timesheet.setApprovedAt(LocalDateTime.now());
+        timesheet.setRejectReason(reason);
+        timesheetMapper.updateById(timesheet);
+        return toTimesheetVO(timesheet);
+    }
+
+    // ==================== 资源利用率 ====================
+
+    @RequirePermission("resource:view")
+    public List<ResourceUtilizationVO> getResourceUtilization(Long projectId) {
+        // 获取项目所有资源
+        List<Resource> resources = resourceMapper.selectList(
+                new LambdaQueryWrapper<Resource>()
+                        .eq(Resource::getProjectId, projectId));
+
+        LocalDate monthStart = LocalDate.now().withDayOfMonth(1);
+
+        return resources.stream().map(resource -> {
+            ResourceUtilizationVO vo = new ResourceUtilizationVO();
+            vo.setUserId(resource.getUserId());
+            vo.setUserName(getUserName(resource.getUserId()));
+            vo.setTotalAllocation(resource.getWorkloadPercent());
+
+            // 活跃项目数
+            Long activeProjects = allocationMapper.selectCount(
+                    new LambdaQueryWrapper<ResourceAllocation>()
+                            .eq(ResourceAllocation::getUserId, resource.getUserId())
+                            .eq(ResourceAllocation::getStatus, "active"));
+            vo.setActiveProjects(activeProjects.intValue());
+
+            // 本月工时
+            BigDecimal monthHours = workLogMapper.selectList(
+                    new LambdaQueryWrapper<WorkLog>()
+                            .eq(WorkLog::getProjectId, projectId)
+                            .eq(WorkLog::getUserId, resource.getUserId())
+                            .ge(WorkLog::getWorkDate, monthStart)
+                            .le(WorkLog::getWorkDate, LocalDate.now())).stream()
+                    .map(WorkLog::getHours)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            vo.setTotalHoursThisMonth(monthHours);
+
+            // 利用率 = 本月工时 / (每周可用工时 * 4周) * 100
+            if (resource.getCapacityHoursPerWeek() != null && resource.getCapacityHoursPerWeek().compareTo(BigDecimal.ZERO) > 0) {
+                BigDecimal monthlyCapacity = resource.getCapacityHoursPerWeek().multiply(BigDecimal.valueOf(4));
+                BigDecimal utilization = monthHours.multiply(BigDecimal.valueOf(100))
+                        .divide(monthlyCapacity, 2, RoundingMode.HALF_UP);
+                vo.setUtilizationRate(utilization);
+            } else {
+                vo.setUtilizationRate(BigDecimal.ZERO);
+            }
+
+            return vo;
+        }).collect(Collectors.toList());
+    }
+
     // ==================== 资源负载分析 ====================
 
     @RequirePermission("resource:view")
@@ -267,5 +485,25 @@ public class ResourceService {
         WorkLogVO vo = new WorkLogVO();
         BeanUtils.copyProperties(workLog, vo);
         return vo;
+    }
+
+    private AllocationVO toAllocationVO(ResourceAllocation allocation) {
+        AllocationVO vo = new AllocationVO();
+        BeanUtils.copyProperties(allocation, vo);
+        vo.setUserName(getUserName(allocation.getUserId()));
+        return vo;
+    }
+
+    private TimesheetVO toTimesheetVO(Timesheet timesheet) {
+        TimesheetVO vo = new TimesheetVO();
+        BeanUtils.copyProperties(timesheet, vo);
+        vo.setUserName(getUserName(timesheet.getUserId()));
+        return vo;
+    }
+
+    private String getUserName(Long userId) {
+        if (userId == null) return null;
+        SysUser user = sysUserMapper.selectById(userId);
+        return user != null ? user.getRealName() : null;
     }
 }

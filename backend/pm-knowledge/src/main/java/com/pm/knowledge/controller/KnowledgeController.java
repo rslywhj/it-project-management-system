@@ -21,6 +21,35 @@ public class KnowledgeController {
 
     private final KnowledgeService knowledgeService;
 
+    // ==================== 分类管理 ====================
+
+    @PostMapping("/projects/{projectId}/knowledge-categories")
+    @Operation(summary = "创建分类")
+    public Result<CategoryVO> createCategory(@PathVariable Long projectId,
+                                              @Valid @RequestBody CategoryRequest request) {
+        return Result.ok(knowledgeService.createCategory(projectId, request));
+    }
+
+    @GetMapping("/projects/{projectId}/knowledge-categories")
+    @Operation(summary = "分类树")
+    public Result<List<CategoryVO>> getCategoryTree(@PathVariable Long projectId) {
+        return Result.ok(knowledgeService.getCategoryTree(projectId));
+    }
+
+    @PutMapping("/knowledge-categories/{categoryId}")
+    @Operation(summary = "更新分类")
+    public Result<CategoryVO> updateCategory(@PathVariable Long categoryId,
+                                              @Valid @RequestBody CategoryRequest request) {
+        return Result.ok(knowledgeService.updateCategory(categoryId, request));
+    }
+
+    @DeleteMapping("/knowledge-categories/{categoryId}")
+    @Operation(summary = "删除分类")
+    public Result<Void> deleteCategory(@PathVariable Long categoryId) {
+        knowledgeService.deleteCategory(categoryId);
+        return Result.ok();
+    }
+
     // ==================== 文章管理 ====================
 
     @PostMapping("/projects/{projectId}/articles")

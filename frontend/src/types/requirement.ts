@@ -5,6 +5,7 @@ export type RequirementStatus =
   | 'approved'
   | 'rejected'
   | 'scheduled'
+  | 'in_progress'
   | 'done'
 
 /** 需求优先级 */
@@ -38,6 +39,7 @@ export interface RequirementCreateRequest {
   source?: string
   category?: string
   assignedTo?: number
+  milestoneId?: number
   estimatedHours?: number
 }
 

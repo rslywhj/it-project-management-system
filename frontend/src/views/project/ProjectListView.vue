@@ -21,10 +21,8 @@
             @change="handleSearch"
           >
             <el-option label="规划中" value="planning" />
-            <el-option label="进行中" value="active" />
-            <el-option label="已暂停" value="suspended" />
-            <el-option label="已完成" value="completed" />
-            <el-option label="已取消" value="cancelled" />
+            <el-option label="进行中" value="in_progress" />
+            <el-option label="已关闭" value="closed" />
           </el-select>
         </div>
         <el-button v-permission="'project:create'" type="primary" @click="handleCreate">
@@ -188,10 +186,8 @@ const formRules: FormRules = {
 // 状态映射
 const statusMap: Record<string, { label: string; type: 'info' | 'warning' | 'success' | 'danger' }> = {
   planning: { label: '规划中', type: 'info' },
-  active: { label: '进行中', type: 'info' },
-  suspended: { label: '已暂停', type: 'warning' },
-  completed: { label: '已完成', type: 'success' },
-  cancelled: { label: '已取消', type: 'danger' },
+  in_progress: { label: '进行中', type: 'warning' },
+  closed: { label: '已关闭', type: 'success' },
 }
 
 function statusLabel(status: string) {

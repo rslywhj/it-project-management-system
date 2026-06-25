@@ -14,7 +14,7 @@ export type TagType = 'primary' | 'success' | 'warning' | 'info' | 'danger'
 // ─── 任务 ─────────────────────────────────────────────────────
 
 export const TASK_TYPE_LABEL: Record<string, string> = {
-  dev: '开发', test: '测试', design: '设计', research: '调研', deploy: '部署', other: '其他',
+  dev: '开发', test: '测试', deploy: '部署', training: '培训', design: '设计', review: '评审',
 }
 
 export const TASK_STATUS_LABEL: Record<string, string> = {
@@ -28,11 +28,11 @@ export const TASK_STATUS_TYPE: Record<string, TagType> = {
 // ─── 需求 ─────────────────────────────────────────────────────
 
 export const REQUIREMENT_STATUS_LABEL: Record<string, string> = {
-  draft: '草稿', reviewing: '评审中', approved: '已通过', rejected: '已拒绝', scheduled: '已排期', done: '已完成',
+  draft: '草稿', reviewing: '评审中', approved: '已通过', rejected: '已拒绝', scheduled: '已排期', in_progress: '进行中', done: '已完成',
 }
 
 export const REQUIREMENT_STATUS_TYPE: Record<string, TagType> = {
-  draft: 'info', reviewing: 'warning', approved: 'success', rejected: 'danger', scheduled: 'warning', done: 'success',
+  draft: 'info', reviewing: 'warning', approved: 'success', rejected: 'danger', scheduled: 'warning', in_progress: 'warning', done: 'success',
 }
 
 // ─── 交付物 ───────────────────────────────────────────────────

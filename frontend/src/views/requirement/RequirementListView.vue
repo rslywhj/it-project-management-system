@@ -17,6 +17,7 @@
           <el-option label="已通过" value="approved" />
           <el-option label="已驳回" value="rejected" />
           <el-option label="已排期" value="scheduled" />
+          <el-option label="进行中" value="in_progress" />
           <el-option label="已完成" value="done" />
         </el-select>
         <el-select v-model="queryParams.priority" placeholder="优先级" clearable style="width: 120px" @change="handleSearch">
@@ -105,6 +106,9 @@
         <el-form-item label="来源">
           <el-input v-model="formData.source" placeholder="如：用户反馈、产品经理" />
         </el-form-item>
+        <el-form-item label="关联里程碑">
+          <el-input-number v-model="formData.milestoneId" :min="1" :max="999999" placeholder="里程碑ID" controls-position="right" style="width: 100%" />
+        </el-form-item>
         <el-form-item label="预估工时">
           <el-input-number v-model="formData.estimatedHours" :min="0" :max="9999" :step="4" placeholder="小时" />
         </el-form-item>
@@ -192,6 +196,7 @@ const formData = reactive<RequirementCreateRequest>({
   priority: 'medium',
   category: '',
   source: '',
+  milestoneId: undefined,
   estimatedHours: undefined,
 })
 const formRules: FormRules = {
@@ -210,7 +215,8 @@ const transitionMap: Record<string, RequirementStatus[]> = {
   reviewing: ['approved', 'rejected'],
   approved: ['scheduled'],
   rejected: ['draft'],
-  scheduled: ['done'],
+  scheduled: ['in_progress'],
+  in_progress: ['done'],
   done: [],
 }
 
@@ -220,10 +226,10 @@ const availableTransitions = ref<RequirementStatus[]>([])
 const priorityMap: Record<string, string> = { critical: '紧急', high: '高', medium: '中', low: '低' }
 const priorityTypeMap: Record<string, 'danger' | 'warning' | 'info'> = { critical: 'danger', high: 'warning', medium: 'info', low: 'info' }
 const statusLabelMap: Record<string, string> = {
-  draft: '草稿', reviewing: '评审中', approved: '已通过', rejected: '已驳回', scheduled: '已排期', done: '已完成',
+  draft: '草稿', reviewing: '评审中', approved: '已通过', rejected: '已驳回', scheduled: '已排期', in_progress: '进行中', done: '已完成',
 }
 const statusTypeMap: Record<string, 'info' | 'warning' | 'success' | 'danger'> = {
-  draft: 'info', reviewing: 'warning', approved: 'success', rejected: 'danger', scheduled: 'info', done: 'success',
+  draft: 'info', reviewing: 'warning', approved: 'success', rejected: 'danger', scheduled: 'info', in_progress: 'warning', done: 'success',
 }
 
 function priorityLabel(p: string) { return priorityMap[p] ?? p }
@@ -247,7 +253,7 @@ function handleSearch() { queryParams.page = 1; loadData() }
 function handleCreate() {
   isEdit.value = false
   editingId.value = null
-  Object.assign(formData, { title: '', description: '', priority: 'medium', category: '', source: '' })
+  Object.assign(formData, { title: '', description: '', priority: 'medium', category: '', source: '', milestoneId: undefined, acceptanceCriteria: '', estimatedHours: undefined })
   dialogVisible.value = true
 }
 
@@ -261,6 +267,7 @@ function handleEdit(row: Requirement) {
     priority: row.priority,
     category: row.category,
     source: row.source,
+    milestoneId: row.milestoneId,
     estimatedHours: row.estimatedHours,
   })
   dialogVisible.value = true

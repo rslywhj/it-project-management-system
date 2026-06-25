@@ -1,5 +1,5 @@
-/** 项目状态 */
-export type ProjectStatus = 'planning' | 'active' | 'suspended' | 'completed' | 'cancelled'
+/** 项目状态（对齐后端：planning/in_progress/closed） */
+export type ProjectStatus = 'planning' | 'in_progress' | 'closed'
 
 /** 项目信息（对齐后端 ProjectVO） */
 export interface Project {

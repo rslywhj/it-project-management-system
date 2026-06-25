@@ -5,6 +5,7 @@
         <el-select v-model="queryParams.status" placeholder="状态" clearable style="width: 120px" @change="handleSearch">
           <el-option label="待开始" value="pending" />
           <el-option label="进行中" value="in_progress" />
+          <el-option label="有风险" value="at_risk" />
           <el-option label="已完成" value="completed" />
           <el-option label="已延期" value="delayed" />
         </el-select>
@@ -91,6 +92,7 @@
           <el-select v-model="formData.status" placeholder="选择状态">
             <el-option label="待开始" value="pending" />
             <el-option label="进行中" value="in_progress" />
+            <el-option label="有风险" value="at_risk" />
             <el-option label="已完成" value="completed" />
             <el-option label="已延期" value="delayed" />
           </el-select>
@@ -152,12 +154,14 @@ const formRules: FormRules = {
 const statusLabelMap: Record<string, string> = {
   pending: '待开始',
   in_progress: '进行中',
+  at_risk: '有风险',
   completed: '已完成',
   delayed: '已延期',
 }
 const statusTypeMap: Record<string, 'info' | 'warning' | 'success' | 'danger'> = {
   pending: 'info',
   in_progress: 'warning',
+  at_risk: 'danger',
   completed: 'success',
   delayed: 'danger',
 }
@@ -165,7 +169,7 @@ const statusTypeMap: Record<string, 'info' | 'warning' | 'success' | 'danger'> =
 function statusLabel(s: string) { return statusLabelMap[s] ?? s }
 function statusTagType(s: string): 'info' | 'warning' | 'success' | 'danger' { return statusTypeMap[s] ?? 'info' }
 function timelineType(s: string): 'info' | 'warning' | 'success' | 'danger' {
-  const map: Record<string, 'info' | 'warning' | 'success' | 'danger'> = { pending: 'info', in_progress: 'warning', completed: 'success', delayed: 'danger' }
+  const map: Record<string, 'info' | 'warning' | 'success' | 'danger'> = { pending: 'info', in_progress: 'warning', at_risk: 'danger', completed: 'success', delayed: 'danger' }
   return map[s] ?? 'info'
 }
 

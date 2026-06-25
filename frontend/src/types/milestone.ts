@@ -1,5 +1,5 @@
-/** 里程碑状态 */
-export type MilestoneStatus = 'pending' | 'in_progress' | 'completed' | 'delayed'
+/** 里程碑状态（对齐后端：pending/in_progress/at_risk/completed/delayed） */
+export type MilestoneStatus = 'pending' | 'in_progress' | 'at_risk' | 'completed' | 'delayed'
 
 /** 里程碑信息（对齐后端 MilestoneVO） */
 export interface Milestone {

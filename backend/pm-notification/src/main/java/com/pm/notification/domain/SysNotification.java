@@ -1,46 +1,43 @@
 package com.pm.notification.domain;
 
-import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.pm.common.base.BaseEntity;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
  * 系统通知实体
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("sys_notification")
-public class SysNotification implements Serializable {
+@Schema(description = "系统通知")
+public class SysNotification extends BaseEntity {
 
-    @TableId(type = IdType.ASSIGN_ID)
-    private Long id;
-
-    /** 接收人ID */
+    @Schema(description = "接收人ID")
     private Long userId;
 
-    /** 通知标题 */
+    @Schema(description = "通知标题")
     private String title;
 
-    /** 通知内容 */
+    @Schema(description = "通知内容")
     private String content;
 
-    /** 通知类型：system/task/requirement/promotion/alert */
+    @Schema(description = "通知类型：system/task/requirement/promotion/alert")
     private String type;
 
-    /** 关联实体类型 */
+    @Schema(description = "关联实体类型")
     private String relatedEntityType;
 
-    /** 关联实体ID */
+    @Schema(description = "关联实体ID")
     private Long relatedEntityId;
 
-    /** 是否已读 */
+    @Schema(description = "是否已读（0否 1是）")
     private Integer isRead;
 
-    /** 阅读时间 */
+    @Schema(description = "阅读时间")
     private LocalDateTime readAt;
-
-    /** 创建时间 */
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
 }

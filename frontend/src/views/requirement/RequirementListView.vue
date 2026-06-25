@@ -102,15 +102,15 @@
         </el-form-item>
         <el-form-item label="分类">
           <el-select v-model="formData.category" placeholder="请选择分类" clearable>
-            <el-option label="通用需求" value="general" />
-            <el-option label="差异化需求" value="differential" />
+            <el-option label="通用" value="general" />
+            <el-option label="差异化" value="differential" />
           </el-select>
         </el-form-item>
         <el-form-item label="来源">
           <el-select v-model="formData.source" placeholder="请选择来源" clearable>
             <el-option label="业务需求" value="business" />
             <el-option label="技术需求" value="tech" />
-            <el-option label="合规要求" value="regulatory" />
+            <el-option label="法规要求" value="regulatory" />
           </el-select>
         </el-form-item>
         <el-form-item label="关联里程碑">
